@@ -107,19 +107,35 @@ namespace Requestor {
 		return Url(path);
 	}
 
-	public IResponse Get(string path){  return Implementation.GetResponse("GET", Url(path), null, null);  }
+	public IResponse Get(string path){ return SetLastResponse(Implementation.GetResponse("GET", Url(path), null, null));  }
 	public IResponse Get(string path, object variables){
 	    var info = new RequestInfo(variables, "QueryStrings");
-	    return Implementation.GetResponse("GET", Url(path, info.QueryStrings), info.PostData, info.Headers);
+	    return SetLastResponse(Implementation.GetResponse("GET", Url(path, info.QueryStrings), info.PostData, info.Headers));
 	}
 
-	public IResponse Post(string path){ return Implementation.GetResponse("POST", Url(path), null, null); }
+	public IResponse Post(string path){ return SetLastResponse(Implementation.GetResponse("POST", Url(path), null, null)); }
 	public IResponse Post(string path, object variables){
 	    var info = new RequestInfo(variables, "PostData");
-	    return Implementation.GetResponse("POST", Url(path, info.QueryStrings), info.PostData, info.Headers);
+	    return SetLastResponse(Implementation.GetResponse("POST", Url(path, info.QueryStrings), info.PostData, info.Headers));
 	}
 
-	// TODO refector to use ToObjectDictionary
+	IResponse _lastResponse;
+	public IResponse LastResponse { get { return _lastResponse; }}
+
+	public IResponse FollowRedirect() {
+	    if (LastResponse == null)
+		throw new Exception("Cannot follow redirect.  LastResponse is null.");
+	    else if (!LastResponse.Headers.Keys.Contains("Location"))
+		throw new Exception("Cannot follow redirect.  Location header of LastResponse is null.");
+	    else
+		return Get(LastResponse.Headers["Location"]);
+	}
+
+	IResponse SetLastResponse(IResponse response) {
+	    _lastResponse = response;
+	    return response;
+	}
+
         internal static IDictionary<string, string> ToStringDictionary(object anonymousType) {
             var dict = new Dictionary<string, string>();
 	    foreach (var item in ToObjectDictionary(anonymousType))

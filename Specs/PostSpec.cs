@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using Machine.Specifications;
 using Requestor;
 
-using System.Reflection;
 namespace Requestor.Specs {
 
     [Subject(typeof(Requestor))]
-    public class Post {
-	Establish context =()=> request = new Requestor("http://localhost:3000"); // TODO move url into a base class or something
+    public class Post : Spec {
+	Establish context =()=> request = new Requestor(TestUrl);
 
 	It can_post =()=> {
 	    request.Post("/info").Body.ShouldContain("You did: POST /info");

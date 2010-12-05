@@ -6,8 +6,8 @@ using Requestor;
 namespace Requestor.Specs {
 
     [Subject(typeof(Requestor))]
-    public class Get {
-	Establish context =()=> request = new Requestor("http://localhost:3000");
+    public class Get : Spec {
+	Establish context =()=> request = new Requestor(TestUrl);
 
 	It can_get_response_body =()=> {
 	    request.Get("/"        ).Body.ShouldEqual("Hello World");
@@ -54,6 +54,35 @@ namespace Requestor.Specs {
 	    request.Get("/info", new { QueryStrings = new {foo="bar"} }).Body.ShouldNotContain("ABC = DEF");
 	    request.Get("/info", new { QueryStrings = new {foo="bar"}, Headers = new { ABC="DEF" } }).Body.ShouldContain("ABC = DEF");
 	    request.Get("/info", new { QueryStrings = new {foo="bar"}, Headers = new { ABC="DEF" } }).Body.ShouldContain("QueryString: foo = bar");
+	};
+
+	It can_get_last_response =()=> {
+	    var requestor = new Requestor(TestUrl);
+	    requestor.LastResponse.ShouldBeNull();
+
+	    requestor.Get("/");
+	    requestor.LastResponse.ShouldNotBeNull();
+	    requestor.LastResponse.Status.ShouldEqual(200);
+	    requestor.LastResponse.Body.ShouldEqual("Hello World");
+
+	    requestor.Get("/info");
+	    requestor.LastResponse.ShouldNotBeNull();
+	    requestor.LastResponse.Status.ShouldEqual(200);
+	    requestor.LastResponse.Body.ShouldContain("GET /info");
+	};
+
+	It can_follow_redirect =()=> {
+	    request.Get("/redirect");
+	    request.LastResponse.Status.ShouldEqual(302);
+	    request.LastResponse.Body.ShouldEqual("Redirecting");
+	    request.LastResponse.Headers.Keys.ShouldContain("Location");
+	    request.LastResponse.Headers["Location"].ShouldEqual("/info?redirected=true");
+
+	    request.FollowRedirect();
+	    request.LastResponse.Status.ShouldEqual(200);
+	    request.LastResponse.Body.ShouldContain("GET /info");
+	    request.LastResponse.Body.ShouldContain("QueryString: redirected = true");
+	    request.LastResponse.Headers.Keys.ShouldNotContain("Location");
 	};
 
 	public static Requestor request;

@@ -9,7 +9,7 @@ namespace Requestor.Specs {
     //  - we can test it
     //  - folks can use it if they really want to
     [Subject(typeof(Requestor.RequestInfo))]
-    public class RequestInfoSpec {
+    public class RequestInfoSpec : Spec {
 
 	It can_add_QueryStrings_by_default =()=> {
 	    var info = new Requestor.RequestInfo(new { Foo = "Bar" }, "QueryStrings");
