@@ -35,15 +35,25 @@ namespace Requestor.Specs {
 	    request.Get("/headers").Headers["BAR"].ShouldEqual("Bar is different");
 	};
 
-	It can_request_with_query_strings =()=> {
+	It can_request_with_query_strings_in_url =()=> {
 	    request.Get("/info"        ).Body.ShouldNotContain("QueryString: foo = bar");
 	    request.Get("/info?foo=bar").Body.ShouldContain(   "QueryString: foo = bar");
+	    // TODO check for clean PATH_INFO
+	};
 
-	    // You can pass an object to Get() and it will be used for QueryStrings
-	    //request.Get("/info", new { foo="bar" }).Body.ShouldContain("QueryString: foo = bar");
-	    //request.Get("/info", new { foo="bar" }).Body.ShouldNotContain("QueryString: hi = there");
-	    //request.Get("/info", new { foo="bar", hi=there }).Body.ShouldContain("QueryString: hi = there");
-	    //request.Get("/info", new { foo="bar", hi=there }).Body.ShouldContain("QueryString: foo = bar");
+	It can_request_with_query_strings_as_object =()=> {
+	    request.Get("/info", new { foo="bar" }).Body.ShouldContain("QueryString: foo = bar");
+	    request.Get("/info", new { foo="bar" }).Body.ShouldNotContain("QueryString: hi = there");
+	    request.Get("/info", new { foo="bar", hi="there" }).Body.ShouldContain("QueryString: hi = there");
+	    request.Get("/info", new { foo="bar", hi="there" }).Body.ShouldContain("QueryString: foo = bar");
+	    // TODO check for clean PATH_INFO
+	};
+
+	It can_supply_query_strings_and_custom_headers =()=> {
+	    request.Get("/info", new { QueryStrings = new {foo="bar"} }).Body.ShouldContain("QueryString: foo = bar");
+	    request.Get("/info", new { QueryStrings = new {foo="bar"} }).Body.ShouldNotContain("ABC = DEF");
+	    request.Get("/info", new { QueryStrings = new {foo="bar"}, Headers = new { ABC="DEF" } }).Body.ShouldContain("ABC = DEF");
+	    request.Get("/info", new { QueryStrings = new {foo="bar"}, Headers = new { ABC="DEF" } }).Body.ShouldContain("QueryString: foo = bar");
 	};
 
 	public static Requestor request;

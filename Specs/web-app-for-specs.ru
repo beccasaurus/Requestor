@@ -19,7 +19,8 @@ run lambda { |env|
       response.write "POST Variable: #{post_variable.first} = #{post_variable.last}\n"
     end
     response.write "\n"
-    env.each {|key, value| response.write "#{key} = #{value}\n" }
+    puts env.to_yaml
+    env.each {|key, value| response.write "Header: #{key} = #{value}\n" }
   when '/boom'
     response.write "Boom!"
     response.status = 500
