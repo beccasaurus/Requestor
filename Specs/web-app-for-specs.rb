@@ -5,3 +5,7 @@ require 'sinatra'
 get '/' do
   "You did: GET /"
 end
+
+post '/foo' do
+  "You did: POST /foo #{ params.inspect }"
+end
