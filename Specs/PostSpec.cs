@@ -7,6 +7,7 @@ namespace Requestor.Specs {
 
     [Subject(typeof(Requestor))]
     public class Post : Spec {
+
 	It can_post =()=> {
 	    Post("/info").Body.ShouldContain("You did: POST /info");
 	};
