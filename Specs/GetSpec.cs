@@ -7,53 +7,52 @@ namespace Requestor.Specs {
 
     [Subject(typeof(Requestor))]
     public class Get : Spec {
-	Establish context =()=> request = new Requestor(TestUrl);
 
 	It can_get_response_body =()=> {
-	    request.Get("/"        ).Body.ShouldEqual("Hello World");
-	    request.Get("/info"    ).Body.ShouldContain("You did: GET /info");
-	    request.Get("/boom"    ).Body.ShouldEqual("Boom!");
-	    request.Get("/redirect").Body.ShouldEqual("Redirecting");
-	    request.Get("/headers" ).Body.ShouldEqual("This has custom headers FOO and BAR");
-	    request.Get("/notfound").Body.ShouldEqual("Not Found: GET /notfound");
+	    Get("/"        ).Body.ShouldEqual("Hello World");
+	    Get("/info"    ).Body.ShouldContain("You did: GET /info");
+	    Get("/boom"    ).Body.ShouldEqual("Boom!");
+	    Get("/redirect").Body.ShouldEqual("Redirecting");
+	    Get("/headers" ).Body.ShouldEqual("This has custom headers FOO and BAR");
+	    Get("/notfound").Body.ShouldEqual("Not Found: GET /notfound");
 	};
 
 	It can_get_response_status =()=> {
-	    request.Get("/"        ).Status.ShouldEqual(200);
-	    request.Get("/info"    ).Status.ShouldEqual(200);
-	    request.Get("/boom"    ).Status.ShouldEqual(500);
-	    request.Get("/redirect").Status.ShouldEqual(302);
-	    request.Get("/headers" ).Status.ShouldEqual(200);
-	    request.Get("/notfound").Status.ShouldEqual(404);
+	    Get("/"        ).Status.ShouldEqual(200);
+	    Get("/info"    ).Status.ShouldEqual(200);
+	    Get("/boom"    ).Status.ShouldEqual(500);
+	    Get("/redirect").Status.ShouldEqual(302);
+	    Get("/headers" ).Status.ShouldEqual(200);
+	    Get("/notfound").Status.ShouldEqual(404);
 	};
 
 	It can_get_response_headers =()=> {
-	    request.Get("/").Headers["Content-Type"].ShouldEqual("text/html");
-	    request.Get("/").Headers.Keys.ShouldNotContain("FOO");
-	    request.Get("/headers").Headers.Keys.ShouldContain("FOO");
-	    request.Get("/headers").Headers["FOO"].ShouldEqual("This is the value of foo");
-	    request.Get("/headers").Headers["BAR"].ShouldEqual("Bar is different");
+	    Get("/").Headers["Content-Type"].ShouldEqual("text/html");
+	    Get("/").Headers.Keys.ShouldNotContain("FOO");
+	    Get("/headers").Headers.Keys.ShouldContain("FOO");
+	    Get("/headers").Headers["FOO"].ShouldEqual("This is the value of foo");
+	    Get("/headers").Headers["BAR"].ShouldEqual("Bar is different");
 	};
 
 	It can_request_with_query_strings_in_url =()=> {
-	    request.Get("/info"        ).Body.ShouldNotContain("QueryString: foo = bar");
-	    request.Get("/info?foo=bar").Body.ShouldContain(   "QueryString: foo = bar");
+	    Get("/info"        ).Body.ShouldNotContain("QueryString: foo = bar");
+	    Get("/info?foo=bar").Body.ShouldContain(   "QueryString: foo = bar");
 	    // TODO check for clean PATH_INFO
 	};
 
 	It can_request_with_query_strings_as_object =()=> {
-	    request.Get("/info", new { foo="bar" }).Body.ShouldContain("QueryString: foo = bar");
-	    request.Get("/info", new { foo="bar" }).Body.ShouldNotContain("QueryString: hi = there");
-	    request.Get("/info", new { foo="bar", hi="there" }).Body.ShouldContain("QueryString: hi = there");
-	    request.Get("/info", new { foo="bar", hi="there" }).Body.ShouldContain("QueryString: foo = bar");
+	    Get("/info", new { foo="bar" }).Body.ShouldContain("QueryString: foo = bar");
+	    Get("/info", new { foo="bar" }).Body.ShouldNotContain("QueryString: hi = there");
+	    Get("/info", new { foo="bar", hi="there" }).Body.ShouldContain("QueryString: hi = there");
+	    Get("/info", new { foo="bar", hi="there" }).Body.ShouldContain("QueryString: foo = bar");
 	    // TODO check for clean PATH_INFO
 	};
 
 	It can_supply_query_strings_and_custom_headers =()=> {
-	    request.Get("/info", new { QueryStrings = new {foo="bar"} }).Body.ShouldContain("QueryString: foo = bar");
-	    request.Get("/info", new { QueryStrings = new {foo="bar"} }).Body.ShouldNotContain("ABC = DEF");
-	    request.Get("/info", new { QueryStrings = new {foo="bar"}, Headers = new { ABC="DEF" } }).Body.ShouldContain("ABC = DEF");
-	    request.Get("/info", new { QueryStrings = new {foo="bar"}, Headers = new { ABC="DEF" } }).Body.ShouldContain("QueryString: foo = bar");
+	    Get("/info", new { QueryStrings = new {foo="bar"} }).Body.ShouldContain("QueryString: foo = bar");
+	    Get("/info", new { QueryStrings = new {foo="bar"} }).Body.ShouldNotContain("ABC = DEF");
+	    Get("/info", new { QueryStrings = new {foo="bar"}, Headers = new { ABC="DEF" } }).Body.ShouldContain("ABC = DEF");
+	    Get("/info", new { QueryStrings = new {foo="bar"}, Headers = new { ABC="DEF" } }).Body.ShouldContain("QueryString: foo = bar");
 	};
 
 	It can_get_last_response =()=> {
@@ -72,19 +71,17 @@ namespace Requestor.Specs {
 	};
 
 	It can_follow_redirect =()=> {
-	    request.Get("/redirect");
-	    request.LastResponse.Status.ShouldEqual(302);
-	    request.LastResponse.Body.ShouldEqual("Redirecting");
-	    request.LastResponse.Headers.Keys.ShouldContain("Location");
-	    request.LastResponse.Headers["Location"].ShouldEqual("/info?redirected=true");
+	    Get("/redirect");
+	    LastResponse.Status.ShouldEqual(302);
+	    LastResponse.Body.ShouldEqual("Redirecting");
+	    LastResponse.Headers.Keys.ShouldContain("Location");
+	    LastResponse.Headers["Location"].ShouldEqual("/info?redirected=true");
 
-	    request.FollowRedirect();
-	    request.LastResponse.Status.ShouldEqual(200);
-	    request.LastResponse.Body.ShouldContain("GET /info");
-	    request.LastResponse.Body.ShouldContain("QueryString: redirected = true");
-	    request.LastResponse.Headers.Keys.ShouldNotContain("Location");
+	    FollowRedirect();
+	    LastResponse.Status.ShouldEqual(200);
+	    LastResponse.Body.ShouldContain("GET /info");
+	    LastResponse.Body.ShouldContain("QueryString: redirected = true");
+	    LastResponse.Headers.Keys.ShouldNotContain("Location");
 	};
-
-	public static Requestor request;
     }
 }

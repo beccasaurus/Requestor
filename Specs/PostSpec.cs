@@ -7,37 +7,38 @@ namespace Requestor.Specs {
 
     [Subject(typeof(Requestor))]
     public class Post : Spec {
-	Establish context =()=> request = new Requestor(TestUrl);
-
 	It can_post =()=> {
-	    request.Post("/info").Body.ShouldContain("You did: POST /info");
+	    Post("/info").Body.ShouldContain("You did: POST /info");
 	};
 
 	It can_post_a_variable =()=> {
-	    request.Post("/info").Body.ShouldNotContain("foo ... bar");
-	    request.Post("/info", new { foo="bar" }).Body.ShouldContain("POST Variable: foo = bar");
+	    Post("/info").Body.ShouldNotContain("foo ... bar");
+	    Post("/info", new { foo="bar" }).Body.ShouldContain("POST Variable: foo = bar");
 	};
 
 	It can_post_multiple_variables =()=> {
-	    request.Post("/info", new { foo="bar"             }).Body.ShouldNotContain("POST Variable: hi = there");
-	    request.Post("/info", new { foo="bar", hi="there" }).Body.ShouldContain("POST Variable: hi = there");
-	    request.Post("/info", new { foo="bar", hi="there" }).Body.ShouldContain("POST Variable: foo = bar");
+	    Post("/info", new { foo="bar"             }).Body.ShouldNotContain("POST Variable: hi = there");
+	    Post("/info", new { foo="bar", hi="there" }).Body.ShouldContain("POST Variable: hi = there");
+	    Post("/info", new { foo="bar", hi="there" }).Body.ShouldContain("POST Variable: foo = bar");
 	};
 
 	It can_post_and_supply_query_strings =()=> {
-	    var body = request.Post("/info", new { foo="bar", QueryStrings = new { hi="there" } }).Body;
-	    body.ShouldContain("POST Variable: foo = bar");
-	    body.ShouldContain("QueryString: hi = there");
-	    body.ShouldNotContain("POST Variable: hi = there");
-	    body.ShouldNotContain("QueryString: foo = bar");
+	    Post("/info", new { foo="bar", QueryStrings = new { hi="there" } });
+
+	    LastResponse.Body.ShouldContain("POST Variable: foo = bar");
+	    LastResponse.Body.ShouldContain("QueryString: hi = there");
+	    LastResponse.Body.ShouldNotContain("POST Variable: hi = there");
+	    LastResponse.Body.ShouldNotContain("QueryString: foo = bar");
 	};
 
 	It can_post_and_supply_query_strings_and_custom_headers =()=> {
-	    var body = request.Post("/info", new { 
+	    Post("/info", new { 
 		    foo = "bar", 
 		    QueryStrings = new { hi = "there"      }, 
 		    Headers      = new { CUSTOM = "header" }
-	    }).Body;
+	    });
+
+	    var body = LastResponse.Body;
 
 	    body.ShouldContain(   "QueryString: hi = there");
 	    body.ShouldNotContain("QueryString: foo = bar");
@@ -51,7 +52,5 @@ namespace Requestor.Specs {
 	    body.ShouldNotContain("Header: foo = bar");
 	    body.ShouldContain(   "Header: HTTP_CUSTOM = header");
 	};
-
-	public static Requestor request;
     }
 }
