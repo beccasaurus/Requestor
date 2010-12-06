@@ -39,6 +39,7 @@ namespace Requestoring {
 	    cookies = new CookieContainer();
 	}
 
+	// TODO this method is definitely big enough and complex enough now that we should refactor into smaller methods!
 	public IResponse GetResponse(string verb, string url, IDictionary<string, string> postVariables, IDictionary<string, string> requestHeaders) {
 	    HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
 	    request.AllowAutoRedirect = false;
@@ -69,9 +70,7 @@ namespace Requestoring {
 		}
 	    }
 
-	    if (requestHeaders != null)
-		foreach (var header in requestHeaders)
-		    request.Headers.Add(header.Key, header.Value);
+	    if (requestHeaders != null) AddHeadersToRequest(requestHeaders, request);
 
 	    if (postVariables != null && postVariables.Count > 0) {
 		if (postString == null) {
@@ -104,6 +103,24 @@ namespace Requestoring {
 		headers.Add(headerName, string.Join(", ", response.Headers.GetValues(headerName)));
 
 	    return new Response { Status = status, Body = body, Headers = headers };
+	}
+
+	void AddHeadersToRequest(IDictionary<string,string> headers, HttpWebRequest request) {
+	    foreach (var header in headers) {
+		switch (header.Key) {
+		    case "ContentType":
+		    case "Content-Type":
+			request.ContentType = header.Value;
+			break;
+		    case "UserAgent":
+		    case "User-Agent":
+			request.UserAgent = header.Value;
+			break;
+		    default:
+			request.Headers.Add(header.Key, header.Value);
+			break;
+		}
+	    }
 	}
     }
 }
