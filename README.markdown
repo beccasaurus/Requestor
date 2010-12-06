@@ -35,6 +35,8 @@ Response is a Requestor.IResponse and it has:
  - `string` Body
  - `IDictionary<string,string>` Headers
 
+For example:
+
     Console.WriteLine(response.Status);
     200
 
