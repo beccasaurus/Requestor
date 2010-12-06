@@ -8,6 +8,10 @@ using System.Collections.Generic;
 
 namespace Requestor {
 
+    // Allows us to say new Vars{ {"Key","Value"}, {"Key2","Value2"} } ... it's not pretty but it's WAY better than 
+    // having to say new Dictionary<string,string>{ {"Key","Value"}, {"Key2","Value2"} }
+    public class Vars : Dictionary<string, string> {}
+
     // Not sure if this interface is necessary but it could end up being useful ?  Might wanna kill it for now
     public interface IResponse {
 	int                        Status  { get; }
@@ -137,6 +141,9 @@ namespace Requestor {
 	}
 
         internal static IDictionary<string, string> ToStringDictionary(object anonymousType) {
+	    if (anonymousType is Dictionary<string, string>)
+		return anonymousType as Dictionary<string, string>;
+
             var dict = new Dictionary<string, string>();
 	    foreach (var item in ToObjectDictionary(anonymousType))
 		if (item.Value == null)
@@ -147,7 +154,17 @@ namespace Requestor {
         }
 
         internal static IDictionary<string, object> ToObjectDictionary(object anonymousType) {
+	    if (anonymousType is Dictionary<string, object>)
+		return anonymousType as Dictionary<string, object>;
+
             var dict = new Dictionary<string, object>();
+
+	    if (anonymousType is Dictionary<string, string>) {
+		foreach (var item in (anonymousType as Dictionary<string, string>))
+		    dict.Add(item.Key, item.Value);
+		return dict;
+	    }
+
             foreach (var property in anonymousType.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
                 if (property.CanRead)
 		    dict.Add(property.Name, property.GetValue(anonymousType, null));

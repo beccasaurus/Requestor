@@ -19,8 +19,18 @@ namespace Requestor.Specs {
 
 	It can_post_multiple_variables =()=> {
 	    Post("/info", new { foo="bar"             }).Body.ShouldNotContain("POST Variable: hi = there");
-	    Post("/info", new { foo="bar", hi="there" }).Body.ShouldContain("POST Variable: hi = there");
-	    Post("/info", new { foo="bar", hi="there" }).Body.ShouldContain("POST Variable: foo = bar");
+	    Post("/info", new { foo="bar", hi="there" }).Body.ShouldContain(   "POST Variable: hi = there");
+	    Post("/info", new { foo="bar", hi="there" }).Body.ShouldContain(   "POST Variable: foo = bar");
+	};
+
+	It can_post_variable_with_nonalphanumeric_characters_in_the_name_using_a_Dictionary =()=> {
+	    Post("/info", new Dictionary<string,string>{{"foo-bar", "hello"}, {"!NEAT*", "w00t"}}).Body.ShouldContain("POST Variable: foo-bar = hello");
+	    Post("/info", new Dictionary<string,string>{{"foo-bar", "hello"}, {"!NEAT*", "w00t"}}).Body.ShouldContain("POST Variable: !NEAT* = w00t");
+	};
+
+	It can_post_variable_with_nonalphanumeric_characters_in_the_name_using_Vars_which_is_a_Dictionary_alias =()=> {
+	    Post("/info", new Vars {{"foo-bar", "hello"}, {"!NEAT*", "w00t"}}).Body.ShouldContain("POST Variable: foo-bar = hello");
+	    Post("/info", new Vars {{"foo-bar", "hello"}, {"!NEAT*", "w00t"}}).Body.ShouldContain("POST Variable: !NEAT* = w00t");
 	};
 
 	It can_post_and_supply_query_strings =()=> {
