@@ -94,7 +94,7 @@ namespace Requestor {
 	// A static instance allowing us to call Requestor.Static.Get() if we want to, without instantiating an instance.
 	// This also helps for inheritance in test environmentst that require static methods, eg. MSpec.
 	public class Static {
-	    public static Requestor Instance;
+	    public static Requestor Instance = new Requestor();
 	    public static IResponse Get(string path){                 return Instance.Get(path);        }
 	    public static IResponse Get(string path, object vars){    return Instance.Get(path, vars);  }
 	    public static IResponse Post(string path){                return Instance.Post(path);        }
