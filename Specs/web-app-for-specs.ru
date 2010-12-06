@@ -1,3 +1,5 @@
+use Rack::Session::Cookie
+
 run lambda { |env|
   request  = Rack::Request.new(env)
   response = Rack::Response.new
@@ -5,12 +7,17 @@ run lambda { |env|
   path = request.path_info.empty? ? '/' : request.path_info
   verb = request.request_method
 
+  env['rack.session']['timesRequested'] ||= 0
+  env['rack.session']['timesRequested'] +=  1
+
   case path
   when '', '/'
     response.write "Hello World"
   when '/info'
     response.headers['Content-Type'] = 'text/plain'
     response.write "You did: #{verb} #{path}"
+    response.write "\n\n"
+    response.write "Times requested: #{env['rack.session']['timesRequested']}"
     response.write "\n\n"
     request.GET.each do |query_string|
       response.write "QueryString: #{query_string.first} = #{query_string.last}\n"

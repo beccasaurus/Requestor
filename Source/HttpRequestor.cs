@@ -20,14 +20,31 @@ namespace Requestor {
     /// HTTP, so this is great for that.  Eventually, we hope to have a WSGI/Rack-like interface 
     /// created that ASP.NET can run on top off, and we can make an <c>IRequestor</c> using that.
     /// </remarks>
-    public class HttpRequestor : IRequestor {
+    public class HttpRequestor : IRequestor, IHaveCookies {
 
 	public static string MethodVariable = "X-HTTP-Method-Override";
+
+	CookieContainer cookies;
+
+	public void EnableCookies() {
+	    ResetCookies();
+	}
+
+	public void DisableCookies() {
+	    cookies = null;
+	}
+
+	public void ResetCookies() {
+	    cookies = new CookieContainer();
+	}
 
 	public IResponse GetResponse(string verb, string url, IDictionary<string, string> postVariables, IDictionary<string, string> requestHeaders) {
 	    HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
 	    request.AllowAutoRedirect = false;
 	    request.UserAgent = "Requestor";
+
+	    if (cookies != null)
+		request.CookieContainer = cookies;
 
 	    if (verb == "PUT" || verb == "DELETE") {
 		request.Method = "POST";

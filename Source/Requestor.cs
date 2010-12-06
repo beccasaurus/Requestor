@@ -15,6 +15,12 @@ namespace Requestor {
 	IResponse GetResponse(string verb, string url, IDictionary<string, string> postVariables, IDictionary<string, string> requestHeaders);
     }
 
+    public interface IHaveCookies {
+	void EnableCookies();
+	void DisableCookies();
+	void ResetCookies();
+    }
+
     /// <summary>
     /// <c>Requestor</c> has the main API for making requests.  Uses a <c>IRequestor</c> implementation behind the scenes.
     /// </summary>
@@ -35,16 +41,19 @@ namespace Requestor {
 	// This also helps for inheritance in test environmentst that require static methods, eg. MSpec.
 	public class Static {
 	    public static Requestor Instance = new Requestor();
-	    public static IResponse Get(string path){                 return Instance.Get(path);        }
-	    public static IResponse Get(string path, object vars){    return Instance.Get(path, vars);  }
-	    public static IResponse Post(string path){                return Instance.Post(path);        }
-	    public static IResponse Post(string path, object vars){   return Instance.Post(path, vars);  }
-	    public static IResponse Put(string path){                 return Instance.Put(path);        }
-	    public static IResponse Put(string path, object vars){    return Instance.Put(path, vars);  }
-	    public static IResponse Delete(string path){              return Instance.Delete(path);        }
-	    public static IResponse Delete(string path, object vars){ return Instance.Delete(path, vars);  }
-	    public static IResponse FollowRedirect(){                 return Instance.FollowRedirect(); }
-	    public static IResponse LastResponse { get {              return Instance.LastResponse;     }}
+	    public static IResponse Get(string path){                 return Instance.Get(path);          }
+	    public static IResponse Get(string path, object vars){    return Instance.Get(path, vars);    }
+	    public static IResponse Post(string path){                return Instance.Post(path);         }
+	    public static IResponse Post(string path, object vars){   return Instance.Post(path, vars);   }
+	    public static IResponse Put(string path){                 return Instance.Put(path);          }
+	    public static IResponse Put(string path, object vars){    return Instance.Put(path, vars);    }
+	    public static IResponse Delete(string path){              return Instance.Delete(path);       }
+	    public static IResponse Delete(string path, object vars){ return Instance.Delete(path, vars); }
+	    public static IResponse FollowRedirect(){                 return Instance.FollowRedirect();   }
+	    public static IResponse LastResponse { get {              return Instance.LastResponse;      }}
+	    public static void      EnableCookies() {                 Instance.EnableCookies();           }
+	    public static void      DisableCookies() {                Instance.DisableCookies();          }
+	    public static void      ResetCookies() {                  Instance.ResetCookies();            }
 	}
 
 	public string RootUrl { get; set; }
@@ -110,6 +119,29 @@ namespace Requestor {
 	    else
 		return Get(LastResponse.Headers["Location"]);
 	}
+
+	public void EnableCookies() {
+	    if (Implementation is IHaveCookies)
+		(Implementation as IHaveCookies).EnableCookies();
+	    else
+		throw new Exception(string.Format("Cannot enable cookies.  Requestor Implementation {0} does not implement IHaveCookies", Implementation));
+	}
+
+	public void DisableCookies() {
+	    if (Implementation is IHaveCookies)
+		(Implementation as IHaveCookies).DisableCookies();
+	    else
+		throw new Exception(string.Format("Cannot disable cookies.  Requestor Implementation {0} does not implement IHaveCookies", Implementation));
+	}
+
+	public void ResetCookies() {
+	    if (Implementation is IHaveCookies)
+		(Implementation as IHaveCookies).ResetCookies();
+	    else
+		throw new Exception(string.Format("Cannot reset cookies.  Requestor Implementation {0} does not implement IHaveCookies", Implementation));
+	}
+
+	// PRIVATE
 
 	IResponse SetLastResponse(IResponse response) {
 	    _lastResponse = response;
