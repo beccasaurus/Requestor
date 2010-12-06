@@ -10,6 +10,9 @@ Once this is working, we will create an adapter (IRequestor) that can support th
 write tests that run against real HTTP *or* you can use Requestor to make "mock" requests against your ASP.NET web application (or any other .NET 
 web framework).
 
+At the moment, Requestor is just an abstraction layer around `System.Net.HttpWebRequest`.  Once a .NET web server gateway interface is working, I hope 
+to be able to make my existing Requestor specs run against this new interface by simply swapping our the driver I'm using!
+
 Download
 --------
 
