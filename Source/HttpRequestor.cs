@@ -79,7 +79,8 @@ namespace Requestoring {
 			postString += variable.Key + "=" + HttpUtility.UrlEncode(variable.Value) + "&";
 		}
 		var bytes = Encoding.ASCII.GetBytes(postString);
-		request.ContentType   = "application/x-www-form-urlencoded";
+		if (request.ContentType == null)
+		    request.ContentType   = "application/x-www-form-urlencoded";
 		request.ContentLength = bytes.Length;
 		using (var stream = request.GetRequestStream())
 		    stream.Write(bytes, 0, bytes.Length);

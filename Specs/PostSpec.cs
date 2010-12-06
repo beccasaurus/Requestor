@@ -22,6 +22,15 @@ namespace Requestoring.Specs {
 	    Post("/info", json).Body.ShouldContain("POST Variable: " + json + " = "); // data shows up as a key with no value on the server
 	};
 
+	It can_post_a_string_with_a_particular_content_type =()=> {
+	    Post("/info", new { PostData = "some data" });
+	    LastResponse.Body.ShouldContain("Header: CONTENT_TYPE = application/x-www-form-urlencoded"); // default
+
+	    Post("/info", new { PostData = "some data", Headers = new { ContentType = "application/json" }});
+	    LastResponse.Body.ShouldNotContain("Header: CONTENT_TYPE = application/x-www-form-urlencoded");
+	    LastResponse.Body.ShouldContain(   "Header: CONTENT_TYPE = application/json");
+	};
+
 	It can_post_multiple_variables =()=> {
 	    Post("/info", new { foo="bar"             }).Body.ShouldNotContain("POST Variable: hi = there");
 	    Post("/info", new { foo="bar", hi="there" }).Body.ShouldContain(   "POST Variable: hi = there");
