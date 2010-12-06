@@ -18,7 +18,7 @@ to be able to make my existing Requestor specs run against this new interface by
 Download
 --------
 
-Latest version: 1.0.0.0
+Latest version: 1.0.1.0
 
 [Download .dll][]
 
@@ -72,6 +72,11 @@ You can easily pass POST variables when doing a POST:
     // this will POST to / with Foo=Bar&Hi=There as POST data
     Post("/", new { Foo = "Bar", Hi = "There" });
 
+You can post a simple string too:
+
+    // this will POST to / with "I might be some JSON or XML" as POST data
+    Post("/", "I might be some JSON or XML");
+
 If you want to use query strings too, you can *explicitly* pass a group of query strings:
 
     // this will POST to /?query=string with Foo=Bar&Hi=There as POST data
@@ -118,6 +123,10 @@ This should work with ASP.NET MVC.
 If you need to change the name of this variable to something else (eg. Ruby on Rails uses `_method`), this is configurable:
 
     HttpRequestor.MethodVariable = "_method";
+
+If you want to disable this and not POST any special variable:
+
+    HttpRequestor.MethodVariable = null;
 
 ### Sessions / Cookies
 
@@ -226,5 +235,5 @@ TODO
 [specs]: http://github.com/remi/Requestor/tree/master/Specs
 [psgi]: http://plackperl.org/
 
-[Download .dll]: http://github.com/remi/Requestor/raw/1.0.0.0/Build/Release/Requestor.dll
-[Browse Source]: http://github.com/remi/Requestor/tree/1.0.0.0
+[Download .dll]: http://github.com/remi/Requestor/raw/1.0.1.0/Build/Release/Requestor.dll
+[Browse Source]: http://github.com/remi/Requestor/tree/1.0.1.0
