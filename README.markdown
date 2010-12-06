@@ -13,6 +13,8 @@ web framework).
 At the moment, Requestor is just an abstraction layer around `System.Net.HttpWebRequest`.  Once a .NET web server gateway interface is working, I hope 
 to be able to make my existing Requestor specs run against this new interface by simply swapping our the driver I'm using!
 
+**NOTE**: The current focus of Requestor is on *testing*.
+
 Download
 --------
 
