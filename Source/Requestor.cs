@@ -191,13 +191,24 @@ namespace Requestor {
 	    public IDictionary<string, string> Headers      = new Dictionary<string, string>();
 
 	    public RequestInfo(object anonymousType, string defaultField) {
+		// PostData can be a simple string, eg. Post("/dogs", "name=Rover&breed=Something");
+		if (defaultField == "PostData" && anonymousType is string) {
+		    PostData.Add(anonymousType as string, null);
+		    return;
+		}
+
 		foreach (var variable in Requestor.ToObjectDictionary(anonymousType)) {
 		    switch (variable.Key) {
 			case "QueryStrings":
 			    QueryStrings = Requestor.ToStringDictionary(variable.Value); break;
 
+			// PostData can be a simple string
 			case "PostData":
-			    PostData = Requestor.ToStringDictionary(variable.Value); break;
+			    if (variable.Value is string)
+				PostData.Add(variable.Value.ToString(), null);
+			    else
+				PostData = Requestor.ToStringDictionary(variable.Value);
+			    break;
 
 			case "Headers":
 			    Headers = Requestor.ToStringDictionary(variable.Value); break;
@@ -205,8 +216,8 @@ namespace Requestor {
 			default:
 			    switch (defaultField) {
 				case "QueryStrings": QueryStrings.Add(variable.Key, variable.Value.ToString()); break;
-				case "PostData":     PostData.Add(variable.Key, variable.Value.ToString()); break;
-				case "Headers":      Headers.Add(variable.Key, variable.Value.ToString()); break;
+				case "PostData":     PostData.Add(variable.Key, variable.Value.ToString());     break;
+				case "Headers":      Headers.Add(variable.Key, variable.Value.ToString());      break;
 				default: throw new Exception("Unknown default type: " + defaultField + ". Expected QueryStrings, PostData, or Headers.");
 			    }
 			    break;

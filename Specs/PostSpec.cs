@@ -17,6 +17,11 @@ namespace Requestor.Specs {
 	    Post("/info", new { foo="bar" }).Body.ShouldContain("POST Variable: foo = bar");
 	};
 
+	It can_post_a_string =()=> {
+	    var json = "{\"Name\":\"Lander\",\"Breed\":\"APBT\"}";
+	    Post("/info", json).Body.ShouldContain("POST Variable: " + json + " = "); // data shows up as a key with no value on the server
+	};
+
 	It can_post_multiple_variables =()=> {
 	    Post("/info", new { foo="bar"             }).Body.ShouldNotContain("POST Variable: hi = there");
 	    Post("/info", new { foo="bar", hi="there" }).Body.ShouldContain(   "POST Variable: hi = there");

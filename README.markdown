@@ -210,6 +210,7 @@ Requestor is released under the MIT license.
 TODO
 ----
 
+ - Add support for Put/Delete to set the REQUEST_METHOD header instead of passing along an extra POST variable (depends on framework)
  - Set default Headers/PostData/QueryStrings that will go out on every request (unless set to null or overriden) - some web APIs will require an Auth token header for EVERY request.
  - Add (extension?) methods for easily sending/receiving JSON and XML data ... may or may not be useful.  I will add this if I find it to be useful.
  - Add some more specs to try testing edge cases.
