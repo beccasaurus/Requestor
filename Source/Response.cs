@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Requestor {
+namespace Requestoring {
 
     /// <summary>
     /// Represents a simple HTTP response

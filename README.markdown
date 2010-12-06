@@ -29,7 +29,7 @@ Usage
 
 The Requestor API is very simple.  It's based on the HTTP method you wish to perform on a given URL.
 
-    using Requestor;
+    using Requestoring; // silly namespace name, so you don't have to say Requestor.Requestor in your code
 
     var request  = new Requestor("http://localhost:1234"); // you can (optionally) pass a RootUrl, as we're doing here
     var response = request.Get("/");

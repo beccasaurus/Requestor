@@ -1,7 +1,7 @@
 using System;
 using Machine.Specifications;
 
-namespace Requestor.Specs {
+namespace Requestoring.Specs {
 
     public class Spec : Requestor.Static {
 	public static string TestUrl = "http://localhost:3000";

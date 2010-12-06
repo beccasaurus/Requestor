@@ -6,7 +6,7 @@ using System.Text;
 using System.Reflection;
 using System.Collections.Generic;
 
-namespace Requestor {
+namespace Requestoring {
 
     /// <summary>
     /// Short alias to ...

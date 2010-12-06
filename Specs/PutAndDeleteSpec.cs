@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Machine.Specifications;
-using Requestor;
+using Requestoring;
 
-namespace Requestor.Specs {
+namespace Requestoring.Specs {
 
     [Subject(typeof(Requestor))][SetupForEachSpecification] // <--- todo Fork MSpec and make them fix this bullshit
     public class Put : Spec {

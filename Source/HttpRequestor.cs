@@ -7,7 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 
-namespace Requestor {
+namespace Requestoring {
 
     /// <summary>
     /// <c>IRequestor</c> implementation that uses real HTTP via <c>System.Net.HttpWebRequest</c>

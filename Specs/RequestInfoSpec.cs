@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Machine.Specifications;
-using Requestor;
+using Requestoring;
 
-namespace Requestor.Specs {
+namespace Requestoring.Specs {
 
     // RequestInfo should ideally only be used internally, but we made it public so ...
     //  - we can test it
