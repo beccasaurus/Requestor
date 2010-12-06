@@ -8,85 +8,25 @@ using System.Collections.Generic;
 
 namespace Requestor {
 
-    // Allows us to say new Vars{ {"Key","Value"}, {"Key2","Value2"} } ... it's not pretty but it's WAY better than 
-    // having to say new Dictionary<string,string>{ {"Key","Value"}, {"Key2","Value2"} }
-    public class Vars : Dictionary<string, string> {}
-
-    // Not sure if this interface is necessary but it could end up being useful ?  Might wanna kill it for now
-    public interface IResponse {
-	int                        Status  { get; }
-	string                     Body    { get; }
-	IDictionary<string,string> Headers { get; }
-    }
-
-    public class Response : IResponse {
-	public int                        Status  { get; set; }
-	public string                     Body    { get; set; }
-	public IDictionary<string,string> Headers { get; set; }
-    }
-
+    /// <summary>
+    /// All Requestors must implement this simple, single method interface
+    /// </summary>
     public interface IRequestor {
 	IResponse GetResponse(string verb, string url, IDictionary<string, string> postVariables, IDictionary<string, string> requestHeaders);
     }
 
-    public class HttpRequestor : IRequestor {
-	public static string MethodVariable = "X-HTTP-Method-Override";
-
-	public IResponse GetResponse(string verb, string url, IDictionary<string, string> postVariables, IDictionary<string, string> requestHeaders) {
-	    HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
-	    request.AllowAutoRedirect = false;
-	    request.UserAgent = "Requestor";
-
-	    if (verb == "PUT" || verb == "DELETE") {
-		request.Method = "POST";
-		if (postVariables == null)
-		    postVariables = new Dictionary<string, string>();
-		postVariables.Add(MethodVariable, verb);
-	    } else
-		request.Method = verb;
-
-	    if (requestHeaders != null)
-		foreach (var header in requestHeaders)
-		    request.Headers.Add(header.Key, header.Value);
-
-	    if (postVariables != null && postVariables.Count > 0) {
-		var postString = "";
-		foreach (var variable in postVariables)
-		    postString += variable.Key + "=" + HttpUtility.UrlEncode(variable.Value) + "&";
-		var bytes = Encoding.ASCII.GetBytes(postString);
-		request.ContentType   = "application/x-www-form-urlencoded";
-		request.ContentLength = bytes.Length;
-		using (var stream = request.GetRequestStream())
-		    stream.Write(bytes, 0, bytes.Length);
-	    }
-
-	    HttpWebResponse response = null;
-	    try {
-		response = request.GetResponse() as HttpWebResponse;
-	    } catch (WebException ex) {
-		response = ex.Response as HttpWebResponse;
-	    }
-
-	    int status = (int) response.StatusCode;
-
-	    string body = "";
-	    using (var reader = new StreamReader(response.GetResponseStream()))
-		body = reader.ReadToEnd();
-
-	    var headers = new Dictionary<string, string>();
-	    foreach (string headerName in response.Headers.AllKeys)
-		headers.Add(headerName, string.Join(", ", response.Headers.GetValues(headerName)));
-
-	    return new Response { Status = status, Body = body, Headers = headers };
-	}
-    }
-
+    /// <summary>
+    /// <c>Requestor</c> has the main API for making requests.  Uses a <c>IRequestor</c> implementation behind the scenes.
+    /// </summary>
     public class Requestor {
 
+	/// <summary>Empty constructor</summary>
 	public Requestor() {}
+	
 	public Requestor(string rootUrl) {
 	    RootUrl = rootUrl;
 	}
+
 	public Requestor(IRequestor implementation) {
 	    Implementation = implementation;
 	}
