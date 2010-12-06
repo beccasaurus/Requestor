@@ -143,7 +143,7 @@ namespace Requestor {
 
 	// PRIVATE
 
-	IResponse SetLastResponse(IResponse response) {
+	internal IResponse SetLastResponse(IResponse response) {
 	    _lastResponse = response;
 	    return response;
 	}

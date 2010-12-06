@@ -6,7 +6,6 @@ namespace Requestor.Specs {
     public class Spec : Requestor.Static {
 	public static string TestUrl = "http://localhost:3000";
 
-	Establish context =()=>
-	    Requestor.Static.Instance = new Requestor(TestUrl);
+	Establish context =()=> Instance = new Requestor(TestUrl);
     }
 }
