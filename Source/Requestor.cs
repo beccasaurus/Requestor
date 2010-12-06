@@ -30,12 +30,20 @@ namespace Requestor {
     }
 
     public class HttpRequestor : IRequestor {
+	public static string MethodVariable = "X-HTTP-Method-Override";
+
 	public IResponse GetResponse(string verb, string url, IDictionary<string, string> postVariables, IDictionary<string, string> requestHeaders) {
 	    HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
 	    request.AllowAutoRedirect = false;
-	    request.Method            = verb;
+	    request.UserAgent = "Requestor";
 
-	    // request.UserAgent = "my custom user agent";
+	    if (verb == "PUT" || verb == "DELETE") {
+		request.Method = "POST";
+		if (postVariables == null)
+		    postVariables = new Dictionary<string, string>();
+		postVariables.Add(MethodVariable, verb);
+	    } else
+		request.Method = verb;
 
 	    if (requestHeaders != null)
 		foreach (var header in requestHeaders)
@@ -121,6 +129,18 @@ namespace Requestor {
 	public IResponse Post(string path, object variables){
 	    var info = new RequestInfo(variables, "PostData");
 	    return SetLastResponse(Implementation.GetResponse("POST", Url(path, info.QueryStrings), info.PostData, info.Headers));
+	}
+
+	public IResponse Put(string path){ return SetLastResponse(Implementation.GetResponse("PUT", Url(path), null, null)); }
+	public IResponse Put(string path, object variables){
+	    var info = new RequestInfo(variables, "PostData");
+	    return SetLastResponse(Implementation.GetResponse("PUT", Url(path, info.QueryStrings), info.PostData, info.Headers));
+	}
+
+	public IResponse Delete(string path){ return SetLastResponse(Implementation.GetResponse("DELETE", Url(path), null, null)); }
+	public IResponse Delete(string path, object variables){
+	    var info = new RequestInfo(variables, "PostData");
+	    return SetLastResponse(Implementation.GetResponse("DELETE", Url(path, info.QueryStrings), info.PostData, info.Headers));
 	}
 
 	IResponse _lastResponse;
