@@ -18,7 +18,7 @@ to be able to make my existing Requestor specs run against this new interface by
 Download
 --------
 
-Latest version: 1.0.1.0
+Latest version: 1.0.1.1
 
 [Download .dll][]
 
@@ -237,5 +237,5 @@ TODO
 [specs]: http://github.com/remi/Requestor/tree/master/Specs
 [psgi]: http://plackperl.org/
 
-[Download .dll]: http://github.com/remi/Requestor/raw/1.0.1.0/Build/Release/Requestor.dll
-[Browse Source]: http://github.com/remi/Requestor/tree/1.0.1.0
+[Download .dll]: http://github.com/remi/Requestor/raw/1.0.1.1/Build/Release/Requestor.dll
+[Browse Source]: http://github.com/remi/Requestor/tree/1.0.1.1
