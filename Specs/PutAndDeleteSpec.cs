@@ -5,13 +5,10 @@ using Requestoring;
 
 namespace Requestoring.Specs {
 
-    [Subject(typeof(Requestor))][SetupForEachSpecification] // <--- todo Fork MSpec and make them fix this bullshit
+    [Subject(typeof(Requestor))][SetupForEachSpecification]
     public class Put : Spec {
-	Cleanup after_each =()=>
-	    HttpRequestor.MethodVariable = "X-HTTP-Method-Override"; // reset to default
-
-	It can_put_using_default_put_variable =()=>
-	    Put("/info").Body.ShouldContain("POST Variable: X-HTTP-Method-Override = PUT");
+	Establish context =()=>
+	    HttpRequestor.MethodVariable = "X-HTTP-Method-Override";
 
 	It can_put_using_default_put_variable_and_post_variables =()=> {
 	    Put("/info", new { Foo = "Bar" });
@@ -36,11 +33,8 @@ namespace Requestoring.Specs {
 
     [Subject(typeof(Requestor))][SetupForEachSpecification]
     public class Delete : Spec {
-	Cleanup after_each =()=>
-	    HttpRequestor.MethodVariable = "X-HTTP-Method-Override"; // reset to default
-
-	It can_delete_using_default_delete_variable =()=>
-	    Delete("/info").Body.ShouldContain("POST Variable: X-HTTP-Method-Override = DELETE");
+	Establish context =()=>
+	    HttpRequestor.MethodVariable = "X-HTTP-Method-Override";
 
 	It can_delete_using_default_delete_variable_and_post_variables =()=> {
 	    Delete("/info", new { Foo = "Bar" });
