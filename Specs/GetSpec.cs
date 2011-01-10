@@ -55,6 +55,24 @@ namespace Requestoring.Specs {
 	    Get("/info", new { QueryStrings = new {foo="bar"}, Headers = new { ABC="DEF" } }).Body.ShouldContain("QueryString: foo = bar");
 	};
 
+	It can_set_headers_before_calling_Get =()=> {
+		AddHeader("HELLO", "There");
+		Headers["Foo"] = "Bar header value";
+
+		Get("/info");
+
+		LastResponse.Body.ShouldContain("HELLO = There");
+		LastResponse.Body.ShouldContain("FOO = Bar header value"); // the spec server uppercases header keys
+	};
+
+	It can_set_query_strings_before_calling_Get =()=> {
+		AddQueryString("Neat", "O");
+	
+		Get("/info");
+
+		LastResponse.Body.ShouldContain("QueryString: Neat = O");
+	};
+
 	It can_get_last_response =()=> {
 	    var requestor = new Requestor(TestUrl);
 	    requestor.LastResponse.ShouldBeNull();

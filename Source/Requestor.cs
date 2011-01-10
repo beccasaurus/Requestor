@@ -41,23 +41,33 @@ namespace Requestoring {
 		// This also helps for inheritance in test environmentst that require static methods, eg. MSpec.
 		public class Static {
 			public static Requestor Instance = new Requestor();
-			public static void      EnableCookies() {                 Instance.EnableCookies();              }
-			public static void      DisableCookies() {                Instance.DisableCookies();             }
-			public static void      ResetCookies() {                  Instance.ResetCookies();               }
-			public static IResponse Get(string path){                 return Instance.Get(path);             }
-			public static IResponse Get(string path, object vars){    return Instance.Get(path, vars);       }
-			public static IResponse Post(string path){                return Instance.Post(path);            }
-			public static IResponse Post(string path, object vars){   return Instance.Post(path, vars);      }
-			public static IResponse Put(string path){                 return Instance.Put(path);             }
-			public static IResponse Put(string path, object vars){    return Instance.Put(path, vars);       }
-			public static IResponse Delete(string path){              return Instance.Delete(path);          }
-			public static IResponse Delete(string path, object vars){ return Instance.Delete(path, vars);    }
-			public static IResponse FollowRedirect(){                 return Instance.FollowRedirect();      }
-			public static IResponse LastResponse { get {              return Instance.LastResponse;         }}
-			public static IDictionary<string,string> DefaultHeaders { get { return Instance.DefaultHeaders; }}
+			public static void      EnableCookies() {                 Instance.EnableCookies();                }
+			public static void      DisableCookies() {                Instance.DisableCookies();               }
+			public static void      ResetCookies() {                  Instance.ResetCookies();                 }
+			public static IResponse Get(string path){                 return Instance.Get(path);               }
+			public static IResponse Get(string path, object vars){    return Instance.Get(path, vars);         }
+			public static IResponse Post(string path){                return Instance.Post(path);              }
+			public static IResponse Post(string path, object vars){   return Instance.Post(path, vars);        }
+			public static IResponse Put(string path){                 return Instance.Put(path);               }
+			public static IResponse Put(string path, object vars){    return Instance.Put(path, vars);         }
+			public static IResponse Delete(string path){              return Instance.Delete(path);            }
+			public static IResponse Delete(string path, object vars){ return Instance.Delete(path, vars);      }
+			public static IResponse FollowRedirect(){                 return Instance.FollowRedirect();        }
+			public static IResponse LastResponse { get {              return Instance.LastResponse;           }}
+			public static IDictionary<string,string> DefaultHeaders { get { return Instance.DefaultHeaders;   }}
+			public static IDictionary<string,string> Headers        { get { return Instance.Headers;          }}
+			public static IDictionary<string,string> QueryStrings   { get { return Instance.QueryStrings;     }}
+			public static IDictionary<string,string> PostData       { get { return Instance.PostData;         }}
+			public static void AddHeader(     string key, string value) { Instance.AddHeader(     key, value); } 
+			public static void AddQueryString(string key, string value) { Instance.AddQueryString(key, value); } 
+			public static void AddPostData(   string key, string value) { Instance.AddPostData(   key, value); } 
+			public static void SetPostData(string value)                { Instance.SetPostData(value);         } 
 		}
 
 		public IDictionary<string,string> DefaultHeaders = new Dictionary<string,string>();
+		public IDictionary<string,string> Headers        = new Dictionary<string,string>();
+		public IDictionary<string,string> QueryStrings   = new Dictionary<string,string>();
+		public IDictionary<string,string> PostData       = new Dictionary<string,string>();
 
 		public string RootUrl { get; set; }
 
@@ -87,27 +97,27 @@ namespace Requestoring {
 				return Url(path);
 		}
 
-		public IResponse Get(string path){ return SetLastResponse(Implementation.GetResponse("GET", Url(path), null, DefaultHeaders));  }
+		public IResponse Get(string path){ return Get(path, null);  }
 		public IResponse Get(string path, object variables){
-			var info = new RequestInfo(variables, "QueryStrings");
+			var info = MergeInfo(new RequestInfo(variables, "QueryStrings"));
 			return SetLastResponse(Implementation.GetResponse("GET", Url(path, info.QueryStrings), info.PostData, MergeWithDefaultHeaders(info.Headers)));
 		}
 
-		public IResponse Post(string path){ return SetLastResponse(Implementation.GetResponse("POST", Url(path), null, DefaultHeaders)); }
+		public IResponse Post(string path){ return Post(path, null); }
 		public IResponse Post(string path, object variables){
-			var info = new RequestInfo(variables, "PostData");
+			var info = MergeInfo(new RequestInfo(variables, "PostData"));
 			return SetLastResponse(Implementation.GetResponse("POST", Url(path, info.QueryStrings), info.PostData, MergeWithDefaultHeaders(info.Headers)));
 		}
 
-		public IResponse Put(string path){ return SetLastResponse(Implementation.GetResponse("PUT", Url(path), null, DefaultHeaders)); }
+		public IResponse Put(string path){ return Put(path, null); }
 		public IResponse Put(string path, object variables){
-			var info = new RequestInfo(variables, "PostData");
+			var info = MergeInfo(new RequestInfo(variables, "PostData"));
 			return SetLastResponse(Implementation.GetResponse("PUT", Url(path, info.QueryStrings), info.PostData, MergeWithDefaultHeaders(info.Headers)));
 		}
 
-		public IResponse Delete(string path){ return SetLastResponse(Implementation.GetResponse("DELETE", Url(path), null, DefaultHeaders)); }
+		public IResponse Delete(string path){ return Delete(path, null); }
 		public IResponse Delete(string path, object variables){
-			var info = new RequestInfo(variables, "PostData");
+			var info = MergeInfo(new RequestInfo(variables, "PostData"));
 			return SetLastResponse(Implementation.GetResponse("DELETE", Url(path, info.QueryStrings), info.PostData, MergeWithDefaultHeaders(info.Headers)));
 		}
 
@@ -144,16 +154,42 @@ namespace Requestoring {
 				throw new Exception(string.Format("Cannot reset cookies.  Requestor Implementation {0} does not implement IHaveCookies", Implementation));
 		}
 
-		// PRIVATE
+		public void AddHeader(string key, string value) {
+			Headers.Add(key, value);
+		}
 
+		public void AddQueryString(string key, string value) {
+			QueryStrings.Add(key, value);
+		}
+
+		public void AddPostData(string key, string value) {
+			PostData.Add(key, value);
+		}
+
+		public void SetPostData(string value) {
+			PostData.Clear();
+			PostData.Add(value, null);
+		}
+
+		// PRIVATE
+		
 		IDictionary<string,string> MergeWithDefaultHeaders(IDictionary<string,string> headers) {
-			var result = new Dictionary<string,string>(DefaultHeaders);
-			foreach (var header in headers)
-				result[header.Key] = header.Value;
+			return MergeDictionaries(DefaultHeaders, headers);
+		}
+
+		IDictionary<string,string> MergeDictionaries(IDictionary<string,string> a, IDictionary<string,string> b) {
+			var result = new Dictionary<string,string>(a);
+			foreach (var item in b)
+				result[item.Key] = item.Value;
 			return result;
 		}
 
 		internal IResponse SetLastResponse(IResponse response) {
+			// clear out the stored headers, querystrings, and post data for this request
+			Headers      = new Dictionary<string,string>();
+			QueryStrings = new Dictionary<string,string>();
+			PostData     = new Dictionary<string,string>();
+
 			_lastResponse = response;
 			return response;
 		}
@@ -189,6 +225,13 @@ namespace Requestoring {
 			return dict;
 		}
 
+		RequestInfo MergeInfo(RequestInfo info) {
+			info.QueryStrings = MergeDictionaries(info.QueryStrings, QueryStrings);
+			info.Headers      = MergeDictionaries(info.Headers,      Headers);
+			info.PostData     = MergeDictionaries(info.PostData,     PostData);
+			return info;
+		}
+
 		// new RequestInfo(new { Foo = "Bar" }, "QueryStrings"); will add Foo to QueryStrings
 		// new RequestInfo(new { Foo = "Bar" }, "PostData"); will add Foo to PostData
 		// new RequestInfo(new { QueryStrings = new { Foo = "Bar" } }, "PostData"); will add Foo to QueryStrings
@@ -201,6 +244,8 @@ namespace Requestoring {
 			public IDictionary<string, string> Headers      = new Dictionary<string, string>();
 
 			public RequestInfo(object anonymousType, string defaultField) {
+				if (anonymousType == null) return;
+
 				// PostData can be a simple string, eg. Post("/dogs", "name=Rover&breed=Something");
 				if (defaultField == "PostData" && anonymousType is string) {
 					PostData.Add(anonymousType as string, null);

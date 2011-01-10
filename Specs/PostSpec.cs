@@ -31,6 +31,23 @@ namespace Requestoring.Specs {
 	    LastResponse.Body.ShouldContain(   "Header: CONTENT_TYPE = application/json");
 	};
 
+	It can_add_post_data_before_doing_post =()=> {
+		AddPostData("this", "that");
+
+		Post("/info", new { more = "data" });
+
+		LastResponse.Body.ShouldContain("POST Variable: this = that");
+		LastResponse.Body.ShouldContain("POST Variable: more = data");
+	};
+
+	It can_set_post_data_to_string_before_doing_post =()=> {
+	    var json = "{\"Name\":\"Lander\",\"Breed\":\"APBT\"}";
+
+		SetPostData(json);
+
+	    Post("/info").Body.ShouldContain("POST Variable: " + json + " = "); // data shows up as a key with no value on the server
+	};
+
 	It can_post_multiple_variables =()=> {
 	    Post("/info", new { foo="bar"             }).Body.ShouldNotContain("POST Variable: hi = there");
 	    Post("/info", new { foo="bar", hi="there" }).Body.ShouldContain(   "POST Variable: hi = there");
