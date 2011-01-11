@@ -140,15 +140,18 @@ Or you can use `AddHeader` or manipulate the `Headers` dictionary before making 
 Put() and Delete() act just like Post().  Any variables passed are assumed to be `PostData`.  It's up to the `IRequestor` implementation that you're using 
 how to handle PUT or DELETE requests.
 
-Using the default backend that Requestor uses (`HttpRequestor`), doing a PUT or a DELETE will add a POST variable with the name `X-HTTP-Method-Override`.  
-This should work with ASP.NET MVC.
+Using the default backend that Requestor uses (`HttpRequestor`), doing a PUT or a DELETE will POST an additionary variable with the value of the HTTP method 
+being performed if HttpRequestor.MethodVariable is set.
 
-If you need to change the name of this variable to something else (eg. Ruby on Rails uses `_method`), this is configurable:
+If you set the name of this variable, this is configurable:
 
-    HttpRequestor.MethodVariable = "_method";
+    // When doing a PUT, we will pass X-HTTP-Method-Override=PUT
+    HttpRequestor.MethodVariable = "X-HTTP-Method-Override"; // ASP.NET
 
-If you want to disable this and not POST any special variable:
+    // When doing a PUT, we will pass _method=PUT
+    HttpRequestor.MethodVariable = "_method"; // Ruby on Rails
 
+    // When doing a PUT, we will not pass along any additional POST parameter
     HttpRequestor.MethodVariable = null;
 
 ### Sessions / Cookies
