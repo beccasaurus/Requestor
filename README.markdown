@@ -65,6 +65,16 @@ Ofcourse, you can build the path yourself:
 
     Get("/?Foo=Bar&Hi=There");
 
+Or you can add query strings to the path you're about to request:
+
+    AddQueryString("Foo", "Bar");
+    Get("/");
+
+Or you can manipulate the QueryStrings dictionary manually:
+
+    QueryStrings["Foo"] = "Bar";
+    Get("/");
+
 ### POST
 
 You can easily pass POST variables when doing a POST:
@@ -76,6 +86,12 @@ You can post a simple string too:
 
     // this will POST to / with "I might be some JSON or XML" as POST data
     Post("/", "I might be some JSON or XML");
+
+Just like Query strings, you can use call `AddPostData(key, value)` or `SetPostData(string)` or you can manipulate the `PostData` dictionary:
+
+    SetPostData("Foo", "Bar");
+    SetPostData("Hi", "There");
+    Post("/");
 
 If you want to use query strings too, you can *explicitly* pass a group of query strings:
 
@@ -92,6 +108,8 @@ You could *explicitly* pass along the POST variable too, if you want to.  This w
 When you do a GET, we implicitly make all of the variables that you pass `QueryStrings`.
 
 When you do a POST, we implicitly make all of the variables that you pass `PostData`.
+
+Alternatively, you can use the methods/dictionaries for setting QueryStrings, PostData, and Headers for the request you're about to make.
 
 ### Custom Headers
 
