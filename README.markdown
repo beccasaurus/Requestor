@@ -135,10 +135,25 @@ Or you can use `AddHeader` or manipulate the `Headers` dictionary before making 
     AddHeader("If-Modified-Since", "Fri, 22 Oct 1999 12:08:38 GMT");
     Get("/something");
 
+### Default Headers
+
+There may be some headers that you want to send with EVERY request that you make with a Requestor instance.
+
+You can add any headers you want to Requestor.DefaultHeaders and they will be sent with EVERY request that Requestor makes:
+
+    DefaultHeaders["Content-Type"] = "application/json";
+
+    Get("/dogs.json"); // will do a GET to /dogs.json with Content-Type=application/json
+
+    AddHeader("Foo", "Bar");
+    Get("/dogs.json"); // will do a GET to /dogs.json with Content-Type=application/json and Foo=Bar
+
+    Get("/dogs.json"); // will do a GET to /dogs.json with Content-Type=application/json ... the Foo header is only used for *1* request
+
 ### PUT and DELETE
 
-Put() and Delete() act just like Post().  Any variables passed are assumed to be `PostData`.  It's up to the `IRequestor` implementation that you're using 
-how to handle PUT or DELETE requests.
+Put() and Delete() act just like Post() besides the HTTP method that they use.  Any variables passed are assumed to be `PostData`. 
+It's up to the `IRequestor` implementation that you're using how to handle PUT or DELETE requests.
 
 Using the default backend that Requestor uses (`HttpRequestor`), doing a PUT or a DELETE will POST an additionary variable with the value of the HTTP method 
 being performed if HttpRequestor.MethodVariable is set.
