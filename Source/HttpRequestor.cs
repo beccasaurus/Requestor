@@ -108,18 +108,19 @@ namespace Requestoring {
 
 		void AddHeadersToRequest(IDictionary<string,string> headers, HttpWebRequest request) {
 			foreach (var header in headers) {
-				switch (header.Key) {
-					case "ContentType":
-						case "Content-Type":
-						request.ContentType = header.Value;
-					break;
-					case "UserAgent":
-						case "User-Agent":
-						request.UserAgent = header.Value;
-					break;
+				switch (header.Key.Replace("-", "").ToLower()) {
+					case "accept":           request.Accept           = header.Value;                 break;
+					case "connection":       request.Connection       = header.Value;                 break;
+					case "contentlength":    request.ContentLength    = long.Parse(header.Value);     break;
+					case "contenttype":      request.ContentType      = header.Value;                 break;
+					case "expect":           request.Expect           = header.Value;                 break;
+					case "ifmodifiedsince":  request.IfModifiedSince  = DateTime.Parse(header.Value); break;
+					case "referer":
+					case "referrer":         request.Referer          = header.Value;                 break;
+					case "transferencoding": request.TransferEncoding = header.Value;                 break;
+					case "useragent":        request.UserAgent        = header.Value;                 break;
 					default:
-					request.Headers.Add(header.Key, header.Value);
-					break;
+						request.Headers.Add(header.Key, header.Value); break;
 				}
 			}
 		}
