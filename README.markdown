@@ -89,8 +89,8 @@ You can post a simple string too:
 
 Just like Query strings, you can use call `AddPostData(key, value)` or `SetPostData(string)` or you can manipulate the `PostData` dictionary:
 
-    SetPostData("Foo", "Bar");
-    SetPostData("Hi", "There");
+    AddPostData("Foo", "Bar");
+    AddPostData("Hi", "There");
     Post("/");
 
 If you want to use query strings too, you can *explicitly* pass a group of query strings:
