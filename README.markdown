@@ -126,9 +126,14 @@ To solve this, you can manually pass in an `IDictionary<string, string>`:
 
     Get("/something", new { Headers = new Dictionary<string, string>{ {"If-Modified-Since", "Fri, 22 Oct 1999 12:08:38 GMT"} }});
 
-That's pretty verbose and it can be difficult to see the keys/values, we you can use Requestor.Vars instead, which is an alias for `Dictionary<string, string>`:
+That's pretty verbose and it can be difficult to see the keys/values, we you can use Requestoring.Vars instead, which is an alias for `Dictionary<string, string>`:
 
     Get("/something", new { Headers = new Vars{ {"If-Modified-Since", "Fri, 22 Oct 1999 12:08:38 GMT"} }});
+
+Or you can use `AddHeader` or manipulate the `Headers` dictionary before making your request:
+
+    AddHeader("If-Modified-Since", "Fri, 22 Oct 1999 12:08:38 GMT");
+    Get("/something");
 
 ### PUT and DELETE
 
