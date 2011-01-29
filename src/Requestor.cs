@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Web;
 using System.Text;
+using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 
@@ -21,12 +22,92 @@ namespace Requestoring {
 		void ResetCookies();
 	}
 
+	public class RealRequestsDisabledException : Exception {
+		public RealRequestsDisabledException(string message) : base(message) {}
+	}
+
+	public class FakeResponse {
+		public int TimesUsed = 0;
+		public int MaxUsage  = -1;
+
+		public string Method      { get; set; }
+		public string Url         { get; set; }
+		public IResponse Response { get; set; }
+	}
+
+	public class FakeResponseList : List<FakeResponse>, IRequestor {
+		public void Add(string method, string url, IResponse response) {
+			Add(new FakeResponse {
+				Method   = method,
+				Url      = url,
+				Response = response
+			});
+		}
+
+		public FakeResponse GetFakeResponse(string verb, string url) {
+			return this.FirstOrDefault(fake => fake.Method == verb && fake.Url == url);
+		}
+
+		public IResponse GetResponse(string verb, string url, IDictionary<string, string> postVariables, IDictionary<string, string> requestHeaders) {
+			var fake = GetFakeResponse(verb, url);
+			if (fake == null)
+				return null;
+			else
+				return fake.Response;
+		}
+	}
+
 	/// <summary>
 	/// <c>Requestor</c> has the main API for making requests.  Uses a <c>IRequestor</c> implementation behind the scenes.
 	/// </summary>
 	public class Requestor {
 
-		/// <summary>Empty constructor</summary>
+		// TODO use this for both the global *and* instance options ... although ... the instance should fall back easily to the global somehow ...
+		// We'll rename or refactor this at some point ... the important thing is the API (being able to say Requestor.Global.Foo)
+		public class GlobalStuff {
+			public bool AllowRealRequests { get; set; }
+			public void EnableRealRequests()  { AllowRealRequests = true;  }
+			public void DisableRealRequests() { AllowRealRequests = false; }
+
+			public FakeResponseList FakeResponses = new FakeResponseList();
+
+			public void FakeResponse(string method, string url, IResponse response) {
+				FakeResponses.Add(method, url, response);
+			}
+
+			public void Reset() {
+				EnableRealRequests();
+				FakeResponses.Clear();
+			}
+		}
+
+		#region Static
+		static Type _defaultIRequestor = typeof(HttpRequestor);
+		public static Type DefaultIRequestor {
+			get { return _defaultIRequestor; }
+			set {
+				if (IsIRequestor(value))
+					_defaultIRequestor = value;
+				else
+					throw new InvalidCastException("DefaultIRequestor must implement IRequestor");
+			}
+		}
+
+		public static bool IsIRequestor(Type type) {
+			return (type.GetInterface(typeof(IRequestor).FullName) != null);
+		}
+
+		static GlobalStuff _global = new GlobalStuff {
+			AllowRealRequests = true
+		};
+
+		public static GlobalStuff Global {
+			get { return _global;  }
+			set { _global = value; }
+		}
+		#endregion
+
+		#region Instance
 		public Requestor() {}
 
 		public Requestor(string rootUrl) {
@@ -35,6 +116,26 @@ namespace Requestoring {
 
 		public Requestor(IRequestor implementation) {
 			Implementation = implementation;
+		}
+
+		bool? _allowRealRequests;
+		public bool AllowRealRequests {
+			get {
+				if (_allowRealRequests == null)
+					return (bool) Requestor.Global.AllowRealRequests;
+				else
+					return (bool) _allowRealRequests;
+			}
+			set { _allowRealRequests = value; }
+		}
+
+		public void DisableRealRequests() { AllowRealRequests = false; }
+		public void EnableRealRequests()  { AllowRealRequests = true;  }
+
+		public FakeResponseList FakeResponses = new FakeResponseList();
+
+		public void FakeResponse(string method, string url, IResponse response) {
+			FakeResponses.Add(method, url, response);
 		}
 
 		public IDictionary<string,string> DefaultHeaders = new Dictionary<string,string>();
@@ -47,20 +148,22 @@ namespace Requestoring {
 		IRequestor _implementation;
 		public IRequestor Implementation {
 			get {
-				if (_implementation == null) _implementation = new HttpRequestor();
+				if (_implementation == null)
+					_implementation = Activator.CreateInstance(DefaultIRequestor) as IRequestor;
+
 				return _implementation;
 			}
 			set { _implementation = value; }
 		}
 
-		string Url(string path) {
+		public string Url(string path) {
 			if (RootUrl == null)
 				return path;
 			else
 				return RootUrl + path;
 		}
 
-		string Url(string path, IDictionary<string, string> queryStrings) {
+		public string Url(string path, IDictionary<string, string> queryStrings) {
 			if (queryStrings != null && queryStrings.Count > 0) {
 				var url = Url(path) + "?";
 				foreach (var queryString in queryStrings)
@@ -70,28 +173,41 @@ namespace Requestoring {
 				return Url(path);
 		}
 
-		public IResponse Get(string path){ return Get(path, null);  }
-		public IResponse Get(string path, object variables){
-			var info = MergeInfo(new RequestInfo(variables, "QueryStrings"));
-			return SetLastResponse(Implementation.GetResponse("GET", Url(path, info.QueryStrings), info.PostData, MergeWithDefaultHeaders(info.Headers)));
-		}
+		public IResponse Get(    string path){ return Get(path, null);    }
+		public IResponse Post(   string path){ return Post(path, null);   }
+		public IResponse Put(    string path){ return Put(path, null);    }
+		public IResponse Delete( string path){ return Delete(path, null); }
 
-		public IResponse Post(string path){ return Post(path, null); }
-		public IResponse Post(string path, object variables){
-			var info = MergeInfo(new RequestInfo(variables, "PostData"));
-			return SetLastResponse(Implementation.GetResponse("POST", Url(path, info.QueryStrings), info.PostData, MergeWithDefaultHeaders(info.Headers)));
-		}
+		public IResponse Get(   string path, object variables){ return Request("GET",    path, variables, "QueryStrings"); }
+		public IResponse Post(  string path, object variables){ return Request("POST",   path, variables, "PostData");     }
+		public IResponse Put(   string path, object variables){ return Request("PUT",    path, variables, "PostData");     }
+		public IResponse Delete(string path, object variables){ return Request("DELETE", path, variables, "PostData");     }
 
-		public IResponse Put(string path){ return Put(path, null); }
-		public IResponse Put(string path, object variables){
-			var info = MergeInfo(new RequestInfo(variables, "PostData"));
-			return SetLastResponse(Implementation.GetResponse("PUT", Url(path, info.QueryStrings), info.PostData, MergeWithDefaultHeaders(info.Headers)));
+		public IResponse Request(string method, string path) {
+			return Request(method, path, null, null);
 		}
-
-		public IResponse Delete(string path){ return Delete(path, null); }
-		public IResponse Delete(string path, object variables){
-			var info = MergeInfo(new RequestInfo(variables, "PostData"));
-			return SetLastResponse(Implementation.GetResponse("DELETE", Url(path, info.QueryStrings), info.PostData, MergeWithDefaultHeaders(info.Headers)));
+		public IResponse Request(string method, string path, object variables, string defaultVariableType) {
+			return Request(method, path, MergeInfo(new RequestInfo(variables, defaultVariableType)));
+		}
+		public IResponse Request(string method, string path, RequestInfo info) {
+			// try instance fake requests
+			var instanceFakeResponse = Request(method, path, info, this.FakeResponses);
+			if (instanceFakeResponse != null)
+				return instanceFakeResponse;
+			
+			// then try global fake requests
+			var globalFakeResponse = Request(method, path, info, Requestor.Global.FakeResponses);
+			if (globalFakeResponse != null)
+				return globalFakeResponse;
+			
+			// then, if real requests are disabled, raise exception, else fall back to real implementation
+			if (AllowRealRequests)
+				return Request(method, path, info, Implementation);
+			else
+				throw new RealRequestsDisabledException(string.Format("Real requests are disabled. {0} {1}", method, Url(path, info.QueryStrings)));
+		}
+		public IResponse Request(string method, string path, RequestInfo info, IRequestor requestor) {
+			return SetLastResponse(requestor.GetResponse(method, Url(path, info.QueryStrings), info.PostData, MergeWithDefaultHeaders(info.Headers)));
 		}
 
 		IResponse _lastResponse;
@@ -135,6 +251,7 @@ namespace Requestoring {
 				ResetCookies();
 			ResetLastResponse();
 			DefaultHeaders.Clear();
+			FakeResponses.Clear();
 		}
 
 		public void ResetLastResponse() {
@@ -157,9 +274,9 @@ namespace Requestoring {
 			PostData.Clear();
 			PostData.Add(value, null);
 		}
+		#endregion
 
-		// PRIVATE
-		
+		#region private
 		IDictionary<string,string> MergeWithDefaultHeaders(IDictionary<string,string> headers) {
 			return MergeDictionaries(DefaultHeaders, headers);
 		}
@@ -218,7 +335,9 @@ namespace Requestoring {
 			info.PostData     = MergeDictionaries(info.PostData,     PostData);
 			return info;
 		}
+		#endregion
 
+		#region RequestInfo
 		// new RequestInfo(new { Foo = "Bar" }, "QueryStrings"); will add Foo to QueryStrings
 		// new RequestInfo(new { Foo = "Bar" }, "PostData"); will add Foo to PostData
 		// new RequestInfo(new { QueryStrings = new { Foo = "Bar" } }, "PostData"); will add Foo to QueryStrings
@@ -267,5 +386,6 @@ namespace Requestoring {
 				}
 			}
 		}
+		#endregion
 	}
 }
