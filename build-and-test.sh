@@ -1,4 +1,5 @@
 #! /bin/bash
-rm -rf Build
+rm -rf bin
+rm -rf TestResult.xml
 xbuild
-nunit-color-console Build/Debug/Requestor.Specs.dll
+nunit-color-console bin/Debug/Requestor.Specs.dll
