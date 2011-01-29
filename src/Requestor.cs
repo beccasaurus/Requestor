@@ -37,35 +37,6 @@ namespace Requestoring {
 			Implementation = implementation;
 		}
 
-		// A static instance allowing us to call Requestor.Static.Get() if we want to, without instantiating an instance.
-		// This also helps for inheritance in test environmentst that require static methods, eg. MSpec.
-		public class Static {
-			public static Requestor Instance = new Requestor();
-			public static void      Reset()         {                 Instance.Reset();                        }
-			public static void      EnableCookies() {                 Instance.EnableCookies();                }
-			public static void      DisableCookies() {                Instance.DisableCookies();               }
-			public static void      ResetCookies() {                  Instance.ResetCookies();                 }
-			public static void      ResetLastResponse() {             Instance.ResetLastResponse();            }
-			public static IResponse Get(string path){                 return Instance.Get(path);               }
-			public static IResponse Get(string path, object vars){    return Instance.Get(path, vars);         }
-			public static IResponse Post(string path){                return Instance.Post(path);              }
-			public static IResponse Post(string path, object vars){   return Instance.Post(path, vars);        }
-			public static IResponse Put(string path){                 return Instance.Put(path);               }
-			public static IResponse Put(string path, object vars){    return Instance.Put(path, vars);         }
-			public static IResponse Delete(string path){              return Instance.Delete(path);            }
-			public static IResponse Delete(string path, object vars){ return Instance.Delete(path, vars);      }
-			public static IResponse FollowRedirect(){                 return Instance.FollowRedirect();        }
-			public static IDictionary<string,string> DefaultHeaders { get { return Instance.DefaultHeaders;   }}
-			public static IDictionary<string,string> Headers        { get { return Instance.Headers;          }}
-			public static IDictionary<string,string> QueryStrings   { get { return Instance.QueryStrings;     }}
-			public static IDictionary<string,string> PostData       { get { return Instance.PostData;         }}
-			public static void AddHeader(     string key, string value) { Instance.AddHeader(     key, value); } 
-			public static void AddQueryString(string key, string value) { Instance.AddQueryString(key, value); } 
-			public static void AddPostData(   string key, string value) { Instance.AddPostData(   key, value); } 
-			public static void SetPostData(string value)                { Instance.SetPostData(value);         } 
-			public static IResponse LastResponse { get { return Instance.LastResponse; } set { Instance.LastResponse = value; } }
-		}
-
 		public IDictionary<string,string> DefaultHeaders = new Dictionary<string,string>();
 		public IDictionary<string,string> Headers        = new Dictionary<string,string>();
 		public IDictionary<string,string> QueryStrings   = new Dictionary<string,string>();

@@ -44,7 +44,7 @@
     <Compile Include="**\*.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Source\Requestor.csproj">
+    <ProjectReference Include="..\src\Requestor.csproj">
       <Project>{175D17E4-2B1B-4AA7-BE4F-3790AFC97F24}</Project>
       <Name>Requestor</Name>
     </ProjectReference>

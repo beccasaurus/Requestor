@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using NUnit.Framework;
+using Requestoring;
 
 // Playing around with making it easier to define SetUp and TearDown ... we'll move this logic into a base class that you can 
 // use for your specs to get this type of functionality ...
