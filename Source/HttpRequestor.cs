@@ -41,6 +41,8 @@ namespace Requestoring {
 
 		// TODO this method is definitely big enough and complex enough now that we should refactor into smaller methods!
 		public IResponse GetResponse(string verb, string url, IDictionary<string, string> postVariables, IDictionary<string, string> requestHeaders) {
+			// Console.WriteLine("HttpRequestor.GetResponse(verb: {0}, url: {1}, post:{2}, headers:{3})", verb, url, postVariables, requestHeaders);
+
 			HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
 			request.AllowAutoRedirect = false;
 			request.UserAgent         = "Requestor";

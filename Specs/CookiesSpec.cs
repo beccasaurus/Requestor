@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
-using Machine.Specifications;
+using NUnit.Framework;
 using Requestoring;
 
 namespace Requestoring.Specs {
 
-    [Subject(typeof(Requestor))]
-    public class Cookies : Spec {
+	[TestFixture]
+    public class CookiesSpec : Spec {
+		Before each =(s)=> s.DisableCookies();
 
-		It can_enable_cookies =()=> {
+		[Test]
+		public void can_enable_cookies() {
 			var body = Get("/info").Body;
 			body.ShouldContain(   "Times requested: 1");
 			body.ShouldNotContain("Times requested: 2");
@@ -18,7 +20,7 @@ namespace Requestoring.Specs {
 			body.ShouldContain(   "Times requested: 1");
 			body.ShouldNotContain("Times requested: 2");
 
-			Instance.EnableCookies();
+			EnableCookies();
 
 			body = Get("/info").Body;
 			body.ShouldContain(   "Times requested: 1");
@@ -36,7 +38,7 @@ namespace Requestoring.Specs {
 			body.ShouldNotContain("Times requested: 2");
 			body.ShouldContain(   "Times requested: 3");
 
-			Instance.ResetCookies();
+			ResetCookies();
 
 			// back to the "first" time
 			body = Get("/info").Body;
@@ -49,7 +51,7 @@ namespace Requestoring.Specs {
 			body.ShouldContain(   "Times requested: 2");
 			body.ShouldNotContain("Times requested: 3");
 
-			Instance.DisableCookies();
+			DisableCookies();
 
 			body = Get("/info").Body;
 			body.ShouldContain(   "Times requested: 1");
@@ -59,6 +61,6 @@ namespace Requestoring.Specs {
 			body = Get("/info").Body;
 			body.ShouldContain(   "Times requested: 1");
 			body.ShouldNotContain("Times requested: 2");
-		};
+		}
     }
 }

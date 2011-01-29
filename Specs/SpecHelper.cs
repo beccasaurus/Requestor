@@ -1,11 +1,35 @@
 using System;
-using Machine.Specifications;
+using System.Reflection;
+using NUnit.Framework;
 
+// Playing around with making it easier to define SetUp and TearDown ... we'll move this logic into a base class that you can 
+// use for your specs to get this type of functionality ...
 namespace Requestoring.Specs {
 
-    public class Spec : Requestor.Static {
-	public static string TestUrl = "http://localhost:3000";
+	public delegate void Before(Spec s = null);
 
-	Establish context =()=> Instance = new Requestor(TestUrl);
-    }
+	public class Spec : Requestor {
+
+		Before GetBeforeEach() {
+			var field = this.GetType().GetField("each", BindingFlags.NonPublic | BindingFlags.Instance);
+			if (field == null)
+				return null;
+			else
+				return field.GetValue(this) as Before;
+		}
+
+		void RunBeforeEach() {
+			var before = GetBeforeEach();
+			if (before != null)
+				before(this);
+		}
+
+		[SetUp]
+		public void BeforeEach() {
+			Reset();
+			HttpRequestor.MethodVariable = null;
+			RootUrl = "http://localhost:3000";
+			RunBeforeEach();
+		}
+	}
 }

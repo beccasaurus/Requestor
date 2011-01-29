@@ -41,9 +41,11 @@ namespace Requestoring {
 		// This also helps for inheritance in test environmentst that require static methods, eg. MSpec.
 		public class Static {
 			public static Requestor Instance = new Requestor();
+			public static void      Reset()         {                 Instance.Reset();                        }
 			public static void      EnableCookies() {                 Instance.EnableCookies();                }
 			public static void      DisableCookies() {                Instance.DisableCookies();               }
 			public static void      ResetCookies() {                  Instance.ResetCookies();                 }
+			public static void      ResetLastResponse() {             Instance.ResetLastResponse();            }
 			public static IResponse Get(string path){                 return Instance.Get(path);               }
 			public static IResponse Get(string path, object vars){    return Instance.Get(path, vars);         }
 			public static IResponse Post(string path){                return Instance.Post(path);              }
@@ -53,7 +55,6 @@ namespace Requestoring {
 			public static IResponse Delete(string path){              return Instance.Delete(path);            }
 			public static IResponse Delete(string path, object vars){ return Instance.Delete(path, vars);      }
 			public static IResponse FollowRedirect(){                 return Instance.FollowRedirect();        }
-			public static IResponse LastResponse { get {              return Instance.LastResponse;           }}
 			public static IDictionary<string,string> DefaultHeaders { get { return Instance.DefaultHeaders;   }}
 			public static IDictionary<string,string> Headers        { get { return Instance.Headers;          }}
 			public static IDictionary<string,string> QueryStrings   { get { return Instance.QueryStrings;     }}
@@ -62,6 +63,7 @@ namespace Requestoring {
 			public static void AddQueryString(string key, string value) { Instance.AddQueryString(key, value); } 
 			public static void AddPostData(   string key, string value) { Instance.AddPostData(   key, value); } 
 			public static void SetPostData(string value)                { Instance.SetPostData(value);         } 
+			public static IResponse LastResponse { get { return Instance.LastResponse; } set { Instance.LastResponse = value; } }
 		}
 
 		public IDictionary<string,string> DefaultHeaders = new Dictionary<string,string>();
@@ -122,7 +124,10 @@ namespace Requestoring {
 		}
 
 		IResponse _lastResponse;
-		public IResponse LastResponse { get { return _lastResponse; }}
+		public IResponse LastResponse {
+			get { return _lastResponse;  }
+			set { _lastResponse = value; }
+		}
 
 		public IResponse FollowRedirect() {
 			if (LastResponse == null)
@@ -152,6 +157,17 @@ namespace Requestoring {
 				(Implementation as IHaveCookies).ResetCookies();
 			else
 				throw new Exception(string.Format("Cannot reset cookies.  Requestor Implementation {0} does not implement IHaveCookies", Implementation));
+		}
+
+		public void Reset() {
+			if (Implementation is IHaveCookies)
+				ResetCookies();
+			ResetLastResponse();
+			DefaultHeaders.Clear();
+		}
+
+		public void ResetLastResponse() {
+			LastResponse = null;
 		}
 
 		public void AddHeader(string key, string value) {

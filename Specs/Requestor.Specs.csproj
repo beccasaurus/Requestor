@@ -34,6 +34,12 @@
     <Reference Include="Machine.Specifications">
       <HintPath>..\Libraries\Machine.Specifications.dll</HintPath>
     </Reference>
+    <Reference Include="nunit.framework">
+      <HintPath>..\Libraries\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="NUnit.Should">
+      <HintPath>..\Libraries\NUnit.Should.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
   </ItemGroup>
