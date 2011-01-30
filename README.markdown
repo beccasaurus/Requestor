@@ -271,7 +271,7 @@ your response will be used for *all* Requestor instances.
 `FakeResponse` can take any `Requestoring.IResponse`.  If you use a `new Response()` (our default implementaiton), it has useful defaults 
 so you don't have to specify Status and Body and Headers if you don't want to
 
-    Requestor.Global.FakeResponse("http://www.google.com", new Response());
+    Requestor.Global.FakeResponse("GET", "http://www.google.com", new Response());
 
     var response = myRequestor.Get("http://www.google.com");
     
@@ -300,7 +300,7 @@ If you want to make sure that your fake response is only used once (or N number 
     >> myRequestor.Get("/");
     => "Hello from the real web site"
 
-    >> myRequestor.FakeResponseOnce("http://www.google.com/", new Response("Faked!"));
+    >> myRequestor.FakeResponseOnce("GET", "http://www.google.com/", new Response("Faked!"));
 
     >> myRequestor.Get("/").Body
     >> "Faked!"
