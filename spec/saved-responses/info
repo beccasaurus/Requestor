@@ -1,0 +1,41 @@
+HTTP/1.1 200 OK
+Content-Type: text/plain
+Content-Length: 1172
+Set-Cookie: rack.session=BAh7BiITdGltZXNSZXF1ZXN0ZWRpBg%3D%3D%0A; path=/
+Connection: keep-alive
+Server: thin 1.2.7 codename No Hup
+
+You did: GET /info
+
+Times requested: 1
+
+
+Header: rack.session = timesRequested1
+Header: HTTP_ACCEPT = */*
+Header: HTTP_HOST = localhost:3000
+Header: SERVER_NAME = localhost
+Header: rack.url_scheme = http
+Header: HTTP_USER_AGENT = curl/7.21.0 (x86_64-pc-linux-gnu) libcurl/7.21.0 OpenSSL/0.9.8o zlib/1.2.3.4 libidn/1.18
+Header: REQUEST_PATH = /info
+Header: SERVER_PROTOCOL = HTTP/1.1
+Header: rack.errors = #<IO:0x7f5aa7fc7ac0>
+Header: async.callback = #<Method: Thin::Connection#post_process>
+Header: REMOTE_ADDR = 127.0.0.1
+Header: PATH_INFO = /info
+Header: rack.run_once = false
+Header: rack.version = 10
+Header: SERVER_SOFTWARE = thin 1.2.7 codename No Hup
+Header: SCRIPT_NAME = 
+Header: HTTP_VERSION = HTTP/1.1
+Header: rack.multithread = false
+Header: REQUEST_URI = /info
+Header: rack.multiprocess = false
+Header: rack.request.query_hash = 
+Header: SERVER_PORT = 3000
+Header: rack.session.options = expire_afterpath/domain
+Header: async.close = #<EventMachine::DefaultDeferrable:0x7f5aa4834590>
+Header: REQUEST_METHOD = GET
+Header: rack.request.query_string = 
+Header: QUERY_STRING = 
+Header: GATEWAY_INTERFACE = CGI/1.2
+Header: rack.input = #<StringIO:0x7f5aa48357d8>

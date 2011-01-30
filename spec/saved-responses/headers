@@ -1,0 +1,10 @@
+HTTP/1.1 200 OK
+Content-Type: text/html
+FOO: This is the value of foo
+Content-Length: 35
+Set-Cookie: rack.session=BAh7BiITdGltZXNSZXF1ZXN0ZWRpBg%3D%3D%0A; path=/
+BAR: Bar is different
+Connection: keep-alive
+Server: thin 1.2.7 codename No Hup
+
+This has custom headers FOO and BAR

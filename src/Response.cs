@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Requestoring {
 
@@ -46,5 +48,37 @@ namespace Requestoring {
 		public int Status                         { get; set; }
 		public string Body                        { get; set; }
 		public IDictionary<string,string> Headers { get; set; }
+
+		public static Response FromHttpResponse(string httpResponseText) {
+			var response = new Response();
+			response.LoadHttpResponse(httpResponseText);
+			return response;
+		}
+
+		public void LoadHttpResponse(string httpResponseText) {
+			var lines = new List<string>(httpResponseText.Split('\n'));
+
+			// HTTP/1.1 200 OK
+			Status = int.Parse(Regex.Match(lines.First(), @"\d{3}").ToString());
+			lines.RemoveAt(0);
+
+			// The body starts after an empty line
+			while (! string.IsNullOrEmpty(lines.First().Trim())) {
+
+				// Header-Key: the value of this header
+				var line  = lines.First();
+				var colon = line.IndexOf(":");
+				var key   = line.Substring(0, colon);
+				var value = line.Substring(colon + 1).Trim();
+
+				Headers[key] = value;
+
+				lines.RemoveAt(0);
+			}
+
+			lines.RemoveAt(0); // remove the empty line
+
+			Body = string.Join("\n", lines.ToArray());
+		}
 	}
 }

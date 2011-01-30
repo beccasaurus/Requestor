@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Requestoring;
@@ -69,6 +70,37 @@ namespace Requestoring.Specs {
 			response.Status.ShouldEqual(200);
 			response.Body.ShouldEqual("Hi there");
 			response.Headers.ShouldEqual(new Dictionary<string,string> {{"Location","/foo"}});
+		}
+
+		string SavedResponse(string filename) {
+			var specDir = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "spec", "saved-responses");
+			return File.ReadAllText(Path.Combine(specDir, filename));
+		}
+
+		[Test]
+		public void can_read_Curl_string_into_a_Response() {
+			var response = Response.FromHttpResponse(SavedResponse("home"));
+			response.Status.ShouldEqual(200);
+			response.Body.ShouldEqual("Hello World");
+			response.Headers.Count.ShouldEqual(5);
+			response.Headers["Content-Type"].ShouldEqual("text/html");
+			response.Headers["Content-Length"].ShouldEqual("11");
+			response.Headers["Set-Cookie"].ShouldContain("rack.session=");
+			response.Headers["Connection"].ShouldEqual("keep-alive");
+			response.Headers.Keys.ShouldContain("Server"); // thin or webrick or whatever
+
+			response = Response.FromHttpResponse(SavedResponse("redirect"));
+			response.Status.ShouldEqual(302);
+			response.Body.ShouldEqual("Redirecting");
+			response.Headers.Count.ShouldEqual(6);
+			response.Headers["Location"].ShouldEqual("/info?redirected=true");
+
+			response = Response.FromHttpResponse(SavedResponse("headers"));
+			response.Status.ShouldEqual(200);
+			response.Body.ShouldEqual("This has custom headers FOO and BAR");
+			response.Headers.Count.ShouldEqual(7);
+			response.Headers["FOO"].ShouldEqual("This is the value of foo");
+			response.Headers["BAR"].ShouldEqual("Bar is different");
 		}
 	}
 }

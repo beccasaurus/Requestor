@@ -1,0 +1,9 @@
+HTTP/1.1 302 Moved Temporarily
+Location: /info?redirected=true
+Content-Type: text/html
+Content-Length: 11
+Set-Cookie: rack.session=BAh7BiITdGltZXNSZXF1ZXN0ZWRpBg%3D%3D%0A; path=/
+Connection: keep-alive
+Server: thin 1.2.7 codename No Hup
+
+Redirecting
