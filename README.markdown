@@ -386,8 +386,8 @@ It's much easier if you have your test's base class inherit from Requestor:
 
         [SetUp]
         public void Setup() {
-            this.RootUrl = "http://localhost:1234";  // set the RootUrl property for our requests
-            this.SetLastResponse(null);              // if you want to clear the last response
+            Clear();                            // clears LastResponse, DefaultHeaders, FakeResponses, etc
+            RootUrl = "http://localhost:1234";  // set the RootUrl property for our requests
         }
 
         [Test]
