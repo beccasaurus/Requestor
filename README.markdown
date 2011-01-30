@@ -111,6 +111,10 @@ When you do a POST, we implicitly make all of the variables that you pass `PostD
 
 Alternatively, you can use the methods/dictionaries for setting QueryStrings, PostData, and Headers for the request you're about to make.
 
+### Dynamic HTTP Request Method
+
+Calling `Get("/foo")` is really just a helpful shortcut for calling `Request("GET", "/foo")` so, if you need to set the HTTP Method dynamically, you can use `Request()`
+
 ### Custom Headers
 
 You can always pass along custom headers by explicitly passing along `Headers` variables.
@@ -149,6 +153,10 @@ You can add any headers you want to Requestor.DefaultHeaders and they will be se
     Get("/dogs.json"); // will do a GET to /dogs.json with Content-Type=application/json and Foo=Bar
 
     Get("/dogs.json"); // will do a GET to /dogs.json with Content-Type=application/json ... the Foo header is only used for *1* request
+
+#### Global
+
+...
 
 ### PUT and DELETE
 
@@ -257,16 +265,6 @@ License
 
 Requestor is released under the MIT license.
 
-TODO
-----
-
- - *CRITICAL* add the ability to set all Headers that are restricted but may be set by properties
- - Add the ability to set default headers ... for different kinds of requests?  ... for all types of requests?
- - Set default Headers/PostData/QueryStrings that will go out on every request (unless set to null or overriden) - some web APIs will require an Auth token header for EVERY request.
- - Add (extension?) methods for easily sending/receiving JSON and XML data ... may or may not be useful.  I will add this if I find it to be useful.
- - Add some more specs to try testing edge cases.
- - Make the specs easy to run.  As it is now, you need to manually boot up the Ruby Rack application found in the Specs directory
- - Require .NET 4.0 or add extensions to extend for 4.0.  If we had Named Arguments, we could write cleaner code, eg. `Get("/", headers: new { ContentType="application/json" });`
 
 [merb]: http://www.merbivore.com/
 [rack-test]: https://github.com/brynary/rack-test

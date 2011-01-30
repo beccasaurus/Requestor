@@ -41,9 +41,14 @@ namespace Requestoring {
 
 		// TODO this method is definitely big enough and complex enough now that we should refactor into smaller methods!
 		public IResponse GetResponse(string verb, string url, IDictionary<string, string> postVariables, IDictionary<string, string> requestHeaders) {
-			// Console.WriteLine("HttpRequestor.GetResponse(verb: {0}, url: {1}, post:{2}, headers:{3})", verb, url, postVariables, requestHeaders);
+			WebRequest     webRequest = WebRequest.Create(url);
+			HttpWebRequest request    = webRequest as HttpWebRequest;
 
-			HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
+			if (request == null)
+				throw new Exception(string.Format(
+					"HttpRequestor.GetResponse failed for: {0} {1}.  This url generated a {2} instead of a HttpWebRequest.",
+					verb, url, webRequest));
+
 			request.AllowAutoRedirect = false;
 			request.UserAgent         = "Requestor";
 			request.Method            = verb;

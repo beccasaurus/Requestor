@@ -75,6 +75,7 @@ namespace Requestoring.Specs {
 
 		[SetUp]
 		public void BeforeEach() {
+			Requestor.DefaultIRequestor = typeof(HttpRequestor);
 			Requestor.Global.Reset();
 			Reset();
 			HttpRequestor.MethodVariable = null;

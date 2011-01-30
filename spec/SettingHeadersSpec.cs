@@ -38,6 +38,28 @@ namespace Requestoring.Specs {
 		}
 
 		[Test]
+		public void can_set_default_values_for_headers_globally() {
+			Get("/info").Body.ShouldNotContain("Header: CONTENT_TYPE = application/json");
+			Get("/info", new { Headers = new { ContentType = "application/foo" }}).Body.ShouldContain("Header: CONTENT_TYPE = application/foo");
+			Get("/info", new { Headers = new { ContentType = "application/foo" }}).Body.ShouldNotContain("Header: CONTENT_TYPE = application/json");
+			
+			// global
+			Requestor.Global.DefaultHeaders.Add("Content-Type", "application/json");
+			Get("/info").Body.ShouldContain("Header: CONTENT_TYPE = application/json");
+			Get("/info").Body.ShouldNotContain("Header: CONTENT_TYPE = application/xml");
+			Get("/info", new { Headers = new { ContentType = "application/foo" }}).Body.ShouldContain("Header: CONTENT_TYPE = application/foo");
+			Get("/info", new { Headers = new { ContentType = "application/foo" }}).Body.ShouldNotContain("Header: CONTENT_TYPE = application/json");
+
+			// override via instance
+			DefaultHeaders.Add("Content-Type", "application/xml");
+			Get("/info").Body.ShouldNotContain("Header: CONTENT_TYPE = application/json");
+			Get("/info").Body.ShouldContain("Header: CONTENT_TYPE = application/xml");
+			Get("/info", new { Headers = new { ContentType = "application/foo" }}).Body.ShouldContain("Header: CONTENT_TYPE = application/foo");
+			Get("/info", new { Headers = new { ContentType = "application/foo" }}).Body.ShouldNotContain("Header: CONTENT_TYPE = application/json");
+			Get("/info", new { Headers = new { ContentType = "application/foo" }}).Body.ShouldNotContain("Header: CONTENT_TYPE = application/xml");
+		}
+
+		[Test]
 		public void can_set_content_type() {
 			Get("/info"                                                                    ).Body.ShouldNotContain("Header: CONTENT_TYPE = application/json");
 			Get("/info", new { Headers = new Vars {{ "Content-Type", "application/json" }}}).Body.ShouldContain(   "Header: CONTENT_TYPE = application/json");

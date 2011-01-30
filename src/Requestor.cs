@@ -6,6 +6,7 @@ using System.Text;
 using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Requestoring {
 
@@ -64,10 +65,15 @@ namespace Requestoring {
 
 		// TODO use this for both the global *and* instance options ... although ... the instance should fall back easily to the global somehow ...
 		// We'll rename or refactor this at some point ... the important thing is the API (being able to say Requestor.Global.Foo)
+		//
+		// This is *really* redundant ... It would be nice to use an instance of Requestor to store this stuff?  perhaps?
+		//
 		public class GlobalStuff {
 			public bool AllowRealRequests { get; set; }
 			public void EnableRealRequests()  { AllowRealRequests = true;  }
 			public void DisableRealRequests() { AllowRealRequests = false; }
+
+			public IDictionary<string,string> DefaultHeaders = new Dictionary<string,string>();
 
 			public FakeResponseList FakeResponses = new FakeResponseList();
 
@@ -75,9 +81,23 @@ namespace Requestoring {
 				FakeResponses.Add(method, url, response);
 			}
 
+			public string RootUrl;
+
 			public void Reset() {
 				EnableRealRequests();
 				FakeResponses.Clear();
+				DefaultHeaders.Clear();
+				Implementation = null;
+			}
+
+			IRequestor _implementation;
+			public IRequestor Implementation {
+				get {
+					if (_implementation == null)
+						_implementation = Activator.CreateInstance(Requestor.DefaultIRequestor) as IRequestor;
+					return _implementation;
+				}
+				set { _implementation = value; }
 			}
 		}
 
@@ -143,20 +163,22 @@ namespace Requestoring {
 		public IDictionary<string,string> QueryStrings   = new Dictionary<string,string>();
 		public IDictionary<string,string> PostData       = new Dictionary<string,string>();
 
-		public string RootUrl { get; set; }
+		string _rootUrl;
+		public string RootUrl {
+			get { return _rootUrl ?? Global.RootUrl; }
+			set { _rootUrl = value; }
+		}
 
 		IRequestor _implementation;
 		public IRequestor Implementation {
-			get {
-				if (_implementation == null)
-					_implementation = Activator.CreateInstance(DefaultIRequestor) as IRequestor;
-
-				return _implementation;
-			}
+			get { return _implementation ?? Global.Implementation; }
 			set { _implementation = value; }
 		}
 
 		public string Url(string path) {
+			if (IsAbsoluteUrl(path))
+				return path;
+
 			if (RootUrl == null)
 				return path;
 			else
@@ -277,13 +299,17 @@ namespace Requestoring {
 		#endregion
 
 		#region private
-		IDictionary<string,string> MergeWithDefaultHeaders(IDictionary<string,string> headers) {
-			return MergeDictionaries(DefaultHeaders, headers);
+		bool IsAbsoluteUrl(string path) {
+			return Regex.IsMatch(path, @"^\w+://"); // if it starts with whatever://, then it's absolute.
 		}
 
-		IDictionary<string,string> MergeDictionaries(IDictionary<string,string> a, IDictionary<string,string> b) {
-			var result = new Dictionary<string,string>(a);
-			foreach (var item in b)
+		IDictionary<string,string> MergeWithDefaultHeaders(IDictionary<string,string> headers) {
+			return MergeDictionaries(MergeDictionaries(Requestor.Global.DefaultHeaders, DefaultHeaders), headers);
+		}
+
+		IDictionary<string,string> MergeDictionaries(IDictionary<string,string> defaults, IDictionary<string,string> overrides) {
+			var result = new Dictionary<string,string>(defaults);
+			foreach (var item in overrides)
 				result[item.Key] = item.Value;
 			return result;
 		}
