@@ -279,6 +279,20 @@ so you don't have to specify Status and Body and Headers if you don't want to
     // response.Body    will be ""
     // response.Headers will be an empty Dictionary<string,string>
 
+#### Loading saved responses
+
+An easy way to record HTTP responses and then use them as fake responses in Requestor is to use curl:
+
+    $ curl -i http://google.com/ > google_home_page
+
+This saves the Status, Headers, and Body of the request.
+
+You can easily load this file into a Response with `Response.FromHttpResponse`:
+
+    Requestor.Global.FakeResponse("GET", "http://www.google.com/", Response.FromHttpResponse(ReadFile("google_home_page")));
+
+    new Requestor().Get("http://www.google.com/"); // gives you the full response, including headers
+
 #### Limiting the number of times your response will be used
 
 If you want to make sure that your fake response is only used once (or N number of times):
