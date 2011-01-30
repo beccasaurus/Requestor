@@ -375,6 +375,11 @@ own `IRequestor` and use that, instead of the default `HttpRequestor`, for your 
         }
     }
 
+That's all there is to it!
+
+If your tests use cookies, its recommended that your `IRequestor` implement `Requestoring.IHaveCookies`. 
+If you don't, then calls to these Requestor methods won't work: `EnableCookies, DisableCookies, ResetCookies`
+
 ### DSL
 
 If you're writing tests, it creates a lot of noise if you're constantly calling Get(), LastResponse, etc on an instance of Requestor.
