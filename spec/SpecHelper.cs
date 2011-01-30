@@ -77,7 +77,11 @@ namespace Requestoring.Specs {
 		public void BeforeEach() {
 			Requestor.DefaultIRequestor = typeof(HttpRequestor);
 			Requestor.Global.Reset();
+			Requestor.Global.EnableRealRequests();
+			Requestor.Global.AutoRedirect = false;
 			Reset();
+			EnableRealRequests();
+			AutoRedirect = false;
 			HttpRequestor.MethodVariable = null;
 			RootUrl = "http://localhost:3000";
 			RunBeforeEach();

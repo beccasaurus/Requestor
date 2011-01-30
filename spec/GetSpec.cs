@@ -118,6 +118,38 @@ namespace Requestoring.Specs {
 			LastResponse.Headers.Keys.ShouldNotContain("Location");
 		}
 
+		[Test]
+		public void can_automatically_follow_redirects() {
+			// Do it manually
+			Get("/redirect-three-times");
+			LastResponse.Status.ShouldEqual(302);
+			LastResponse.Body.ShouldEqual("Redirecting");
+			LastResponse.Headers["Location"].ShouldEqual("/redirect-twice");
+
+			FollowRedirect();
+			LastResponse.Status.ShouldEqual(301);
+			LastResponse.Body.ShouldEqual("Redirecting");
+			LastResponse.Headers["Location"].ShouldEqual("/redirect");
+
+			FollowRedirect();
+			LastResponse.Body.ShouldEqual("Redirecting");
+			LastResponse.Headers.Keys.ShouldContain("Location");
+			LastResponse.Headers["Location"].ShouldEqual("/info?redirected=true");
+
+			FollowRedirect();
+			LastResponse.Status.ShouldEqual(200);
+			LastResponse.Body.ShouldContain("GET /info");
+			LastResponse.Headers.Keys.ShouldNotContain("Location");
+			
+			// Do it automatically
+			AutoRedirect = true;
+
+			Get("/redirect-three-times");
+			LastResponse.Status.ShouldEqual(200);
+			LastResponse.Body.ShouldContain("GET /info");
+			LastResponse.Headers.Keys.ShouldNotContain("Location");
+		}
+
 		class SimpleRequestor : IRequestor {
 			public IResponse GetResponse(string verb, string url, IDictionary<string, string> postVariables, IDictionary<string, string> requestHeaders) {
 				return new Response {

@@ -39,6 +39,14 @@ run lambda { |env|
     response.write 'Redirecting'
     response.headers['Location'] = '/info?redirected=true'
     response.status = 302
+  when '/redirect-twice'
+    response.write 'Redirecting'
+    response.headers['Location'] = '/redirect'
+    response.status = 301
+  when '/redirect-three-times'
+    response.write 'Redirecting'
+    response.headers['Location'] = '/redirect-twice'
+    response.status = 302
   else
     response.write "Not Found: #{verb} #{path}"
     response.status = 404

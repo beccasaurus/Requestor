@@ -81,6 +81,8 @@ namespace Requestoring {
 	public class Requestor {
 
 		public class GlobalConfiguration {
+			public bool AutoRedirect { get; set; }
+
 			public bool AllowRealRequests { get; set; }
 
 			public IDictionary<string,string> DefaultHeaders = new Dictionary<string,string>();
@@ -102,7 +104,6 @@ namespace Requestoring {
 			public string RootUrl;
 
 			public void Reset() {
-				EnableRealRequests();
 				FakeResponses.Clear();
 				DefaultHeaders.Clear();
 				Implementation = null;
@@ -156,14 +157,15 @@ namespace Requestoring {
 			Implementation = implementation;
 		}
 
+		bool? _autoRedirect;
+		public bool AutoRedirect {
+			get { return (bool)(_autoRedirect ?? Requestor.Global.AutoRedirect); }
+			set { _autoRedirect = value; }
+		}
+
 		bool? _allowRealRequests;
 		public bool AllowRealRequests {
-			get {
-				if (_allowRealRequests == null)
-					return (bool) Requestor.Global.AllowRealRequests;
-				else
-					return (bool) _allowRealRequests;
-			}
+			get { return (bool)(_allowRealRequests ?? Requestor.Global.AllowRealRequests); }
 			set { _allowRealRequests = value; }
 		}
 
@@ -252,7 +254,16 @@ namespace Requestoring {
 				throw new RealRequestsDisabledException(string.Format("Real requests are disabled. {0} {1}", method, Url(path, info.QueryStrings)));
 		}
 		public IResponse Request(string method, string path, RequestInfo info, IRequestor requestor) {
-			return SetLastResponse(requestor.GetResponse(method, Url(path, info.QueryStrings), info.PostData, MergeWithDefaultHeaders(info.Headers)));
+			var response = requestor.GetResponse(method, Url(path, info.QueryStrings), info.PostData, MergeWithDefaultHeaders(info.Headers));
+
+			if (response == null)
+				return null;
+
+	 		if (AutoRedirect)
+				while (IsRedirect(response))
+					response = FollowRedirect(response);
+
+			return SetLastResponse(response);
 		}
 
 		IResponse _lastResponse;
@@ -261,13 +272,21 @@ namespace Requestoring {
 			set { _lastResponse = value; }
 		}
 
+		public bool IsRedirect(IResponse response) {
+			return (response.Status.ToString().StartsWith("3") && response.Headers.Keys.Contains("Location"));
+		}
+
 		public IResponse FollowRedirect() {
-			if (LastResponse == null)
-				throw new Exception("Cannot follow redirect.  LastResponse is null.");
-			else if (!LastResponse.Headers.Keys.Contains("Location"))
-				throw new Exception("Cannot follow redirect.  Location header of LastResponse is null.");
-			else
-				return Get(LastResponse.Headers["Location"]);
+			return FollowRedirect(LastResponse);
+		}
+
+		public IResponse FollowRedirect(IResponse response) {
+			if (response == null)
+				throw new Exception("Cannot follow redirect.  response is null.");
+			else if (!response.Headers.Keys.Contains("Location"))
+				throw new Exception("Cannot follow redirect.  Location header of response is null.");
+			else 
+				return Get(response.Headers["Location"]);
 		}
 
 		public void EnableCookies() {
@@ -292,8 +311,7 @@ namespace Requestoring {
 		}
 
 		public void Reset() {
-			if (Implementation is IHaveCookies)
-				ResetCookies();
+			Implementation = null;
 			ResetLastResponse();
 			DefaultHeaders.Clear();
 			FakeResponses.Clear();
