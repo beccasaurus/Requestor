@@ -75,6 +75,28 @@ Or you can manipulate the QueryStrings dictionary manually:
     QueryStrings["Foo"] = "Bar";
     Get("/");
 
+### RootUrl and absolute Urls
+
+You can specify a RootUrl to use for *all* requests make by all instances of Requestor, or you can specify a RootUrl for one instance:
+
+    Requestor.Global.RootUrl = "http://google.com";
+
+    // GET http://google.com/foo
+    new Requestor().Get("/foo");
+
+    var requestor = new Requestor("http://github.com/api/v2/json");
+
+    // GET http://github.com/api/v2/json/user/show/remi
+    requestor.Get("/user/show/remi");
+
+    requestor.RootUrl = "http://different.com";
+
+    // GET http://different.com/user/show/remi
+    requestor.Get("/user/show/remi");
+
+    // GET http://remi.org
+    requestor.Get("http://remi.org"); // even though a RootUrl is specified, it won't be used because we specified an absolute Url
+
 ### POST
 
 You can easily pass POST variables when doing a POST:
@@ -154,9 +176,9 @@ You can add any headers you want to Requestor.DefaultHeaders and they will be se
 
     Get("/dogs.json"); // will do a GET to /dogs.json with Content-Type=application/json ... the Foo header is only used for *1* request
 
-#### Global
+You can set default headers globally, too, so they are used for *all* Requestor instances:
 
-...
+    Requestor.Global.DefaultHeaders["Content-Type"] = "application/json";
 
 ### PUT and DELETE
 
@@ -215,6 +237,144 @@ Because Requestor is meant for low-level access to HTTP responses, we don't auto
     request.LastResponse.Status; // 200
     request.LastResponse.Body;   // "Welcome to the new path!"
 
+### Faking Requests
+
+If you're using Requestor to make calls against a REST API, it's likely that you'll want to be able to test your code *without* making any real HTTP requests.
+
+Requestor has a built-in mechanism for providing mock responses that will be returned instead of making real requests.
+
+If you have a reference to the Requestor that your code uses, you can:
+
+    // Let's assume that your requestor's RootUrl is http://google.com
+
+    myRequestor.FakeResponse("GET", "http://google.com/foo", new Response {
+        Status  = 200,
+        Body    = "You requested http://google.com/foo",
+        Headers = new Dictionary<string,string>()
+    });
+
+    // Now, whenever you make a request that matches, the Response you provided will be returned instead
+    myRequestor.Get("/foo"); // <--- this will not make a real request, it will just return your provided response
+
+    // If you request a url that doesn't match, however, it will make the real request
+    myRequestor.Get("/foo?q=someQuery"); // <--- this will make a real request
+
+If you don't have a reference to the Requestor instance, that's fine.  You can call `Requestor.Global.FakeResponse()` instead and 
+your response will be used for *all* Requestor instances.
+
+`FakeResponse` can take any `Requestoring.IResponse`.  If you use a `new Response()` (our default implementaiton), it has useful defaults 
+so you don't have to specify Status and Body and Headers if you don't want to
+
+    Requestor.Global.FakeResponse("http://www.google.com", new Response());
+
+    var response = myRequestor.Get("http://www.google.com");
+    
+    // response.Status  will be 200
+    // response.Body    will be ""
+    // response.Headers will be an empty Dictionary<string,string>
+
+#### Limiting the number of times your response will be used
+
+If you want to make sure that your fake response is only used once (or N number of times):
+
+    >> myRequestor.Get("/");
+    => "Hello from the real web site"
+
+    >> myRequestor.FakeResponseOnce("http://www.google.com/", new Response("Faked!"));
+
+    >> myRequestor.Get("/").Body
+    >> "Faked!"
+
+    >> myRequestor.Get("/");
+    => "Hello from the real web site"   // <--- the fake response was only used once
+
+To have your rake response returned N times, you can call `FakeResponse(5, ...)`
+
+By default, calling `FakeResponse()` without a number will allow your response to be returned indefinitely.
+
+If you want to clear all of the fake responses (for instance, before each of your tests):
+
+    Requestor.Global.FakeResponses.Clear(); // clears all globally registered responses
+
+    myRequestor.FakeResponses.Clear(); // clears responses for this requestor
+
+#### Disabling Real Requests
+
+When testing, it's often useful to disable real HTTP requests entirely:
+
+    Requestor.Global.DisableRealRequests(); // disable requests for all Requestor instances
+
+    myRequestor.DisableRealRequests(); // will only disable requests for this instance
+
+    myRequestor.Get("http://www.google.com"); // if you haven't provided a FakeResponse for this, it'll throw an exception:
+
+    Requestoring.RealRequestsDisabledException: Real requests are disabled. GET http://www.google.com
+      at Requestoring.Requestor.Request (System.String method, System.String path, Requestoring.RequestInfo info) [0x00000] in <filename unknown>:0 
+
+The message of the exception thrown included the Url that was being requested so you can easily register a new FakeResponse for that Url.
+
+**NOTE**: `DisableRealRequests()` prevents the `Requestor.Implementation` (eg. `HttpRequestor`) from being called at *all* so it will work with any `IRequestor`
+
+#### Manually Faking Requests
+
+If the built-in mechanisms for faking requests don't work for you for some reason, the easiest way to fake requests for your tests is to implement your 
+own `IRequestor` and use that, instead of the default `HttpRequestor`, for your tests.  It's a lot easier than it sounds.  `IRequestor` only has 1 method!
+
+    public class MyMockWebApi : IRequestor {
+
+        // This is the *only* method required for implementing your own IRequestor
+        //
+        // Let's say that your code makes calls to urls like http://www.somesite.com/dogs.json and you want to 
+        // catch all of these and read dogs.json (or cats.json) off of the file system and return it, instead of making 
+        // real requests to the website.
+        //
+        IResponse GetResponse(string verb, string url, IDictionary<string, string> postVariables, IDictionary<string, string> requestHeaders) {
+            var jsonDirectory = Path.Combine(Directory.GetCurrentDirectory(), "example-json");
+            var jsonFilePath  = Path.Combine(jsonDirectory, new Uri(url).AbsolutePath); // this would be something like example-json/dogs.json
+
+            // when testing, it's useful to throw exceptions with useful messages when your mocking doesn't yet support something your code is trying to do
+            if (! File.Exists(jsonFilePath))
+                throw new Exception("Tried to {0} {1} and couldn't find json file to return: {2}", verb, url, jsonFilePath);
+
+            return new Response {
+                Body    = File.ReadAllText(jsonFilePath),
+                Headers = new Dictionary<string,string> {{"Content-Type", "application/json"}};
+            };
+        }
+
+    }
+
+    [TestFixture]
+    public class GettingDogs {
+
+        [SetUp]
+        public void BeforeEach() {
+            // Override the Requestor implementation that your code uses so it uses your IRequestor instead of HttpRequestor
+            Requestor.Global.Implementation = new MyMockWebApi();
+        }
+
+        [Test]
+        public void ExampleTest() {
+            // Assuming your application uses Requestor, it will return the sample json instead of doing real HTTP requests!
+            var dogs = MyApplication.GetDogs();    
+            dogs.Count.ShouldEqual(5);
+            dogs.First.Name.ShouldEqual("Rover");
+        }
+
+        [Test]
+        public void DifferentStyle() {
+            // Reading from the file system is nice for large example data but, if you're dealing with little snippets of 
+            // JSON then it might be useful to write your IRequestor to support something like this:
+
+            MyMockWebApi.JsonSamples.Add("/cats.json", @"[{""Name"":""Mittens""},{""Name"":""Tom""}]");
+
+            var cats = MyApplication.GetCats();
+            cats.Count.ShouldEqual(2);
+            cats.First.Name.ShouldEqual("Mittens");
+            cats.Last.Name.ShouldEquel("Tom");
+        }
+    }
+
 ### DSL
 
 If you're writing tests, it creates a lot of noise if you're constantly calling Get(), LastResponse, etc on an instance of Requestor.
@@ -242,22 +402,6 @@ It's much easier if you have your test's base class inherit from Requestor:
         }
     }
 
-We also made a static, singleton instance of Requestor available as `Requestor.Static.Instance` to help you if 
-your testing environment prefers static variables, like [MSpec][] does:
-
-    [Subject("Getting Profile")]
-    public class when_logged_in : Requestor.Static {
-
-        Establish context =()=> Instance.RootUrl = "http://localhost:1234";
-
-        It can_get_profile_using_user_id =()=> {
-            Get("/profile", new { UserID = "5"; });
-            Assert.That(LastResponse.Body.AsJson()["Name"], Is.EqualTo("Bob Smith"));       // AsJson isn't part of Requestor
-            Assert.That(LastResponse.Body.AsJson()["Email"], Is.EqualTo("bob@smith.com"));
-        };
-
-    }
-
 To see more examples, you can [browse Requestor's Specs][specs]
 
 License
@@ -273,7 +417,7 @@ Requestor is released under the MIT license.
 [wsgi]: http://wsgi.org/wsgi/
 [jsgi]: http://jackjs.org/
 [mspec]: https://github.com/machine/machine.specifications
-[specs]: http://github.com/remi/Requestor/tree/master/Specs
+[specs]: http://github.com/remi/Requestor/tree/master/spec
 [psgi]: http://plackperl.org/
 
 [Download .dll]: http://github.com/remi/Requestor/raw/1.0.1.4/Build/Release/Requestor.dll
