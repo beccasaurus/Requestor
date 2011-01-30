@@ -223,7 +223,7 @@ To help make your tests more readable, we store the last response that a Request
 
 ### Following Redirects
 
-Because Requestor is meant for low-level access to HTTP responses, we don't automatically follow redirects.  But we make it easy to follow one:
+Because Requestor is meant for low-level access to HTTP responses, we don't automatically follow redirects by default.  But we make it easy to follow one:
 
     var request = new Requestor("http://localhost:1234");
     request.Get("/old/path");
@@ -236,6 +236,12 @@ Because Requestor is meant for low-level access to HTTP responses, we don't auto
 
     request.LastResponse.Status; // 200
     request.LastResponse.Body;   // "Welcome to the new path!"
+
+If you want to automatically follow redirects:
+
+    Requestor.Global.AutoRedirect = true;    // global
+
+    myRequestor.AutoRedirect = true;         // just for this instance
 
 ### Faking Requests
 
