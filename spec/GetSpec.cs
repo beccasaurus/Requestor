@@ -8,10 +8,11 @@ namespace Requestoring.Specs {
     [TestFixture]
     public class GetSpec : Spec {
 
-		[Test][Ignore]
-		public void can_get_using_global_requestor_instance(){
-			// absolute url or global RootUrl ... global headers work too ...
-		}
+		// Maybe?  Not super useful.  But, if we do this, it should support the global RootUrl and whatnot
+		//
+		// [Test][Ignore]
+		// public void can_get_using_global_requestor_instance(){
+		// }
 
 		[Test]
 		public void can_get_response_body() {
