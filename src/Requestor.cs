@@ -44,13 +44,30 @@ namespace Requestoring {
 				Response = response
 			});
 		}
+		public void Add(int maxTimesToReturn, string method, string url, IResponse response) {
+			Add(new FakeResponse {
+				Method   = method,
+				Url      = url,
+				Response = response,
+				MaxUsage = maxTimesToReturn
+			});
+		}
 
+		// This is a safe way to get a fake response.  It does NOT increment TimesUsed
 		public FakeResponse GetFakeResponse(string verb, string url) {
 			return this.FirstOrDefault(fake => fake.Method == verb && fake.Url == url);
 		}
 
+		// This will increment TimesUsed and remove the FakeResponse after its last usage
 		public IResponse GetResponse(string verb, string url, IDictionary<string, string> postVariables, IDictionary<string, string> requestHeaders) {
 			var fake = GetFakeResponse(verb, url);
+
+			if (fake != null && fake.MaxUsage > 0) {
+				fake.TimesUsed++;
+				if (fake.TimesUsed >= fake.MaxUsage)
+					this.Remove(fake);
+			}
+				
 			if (fake == null)
 				return null;
 			else
@@ -63,22 +80,23 @@ namespace Requestoring {
 	/// </summary>
 	public class Requestor {
 
-		// TODO use this for both the global *and* instance options ... although ... the instance should fall back easily to the global somehow ...
-		// We'll rename or refactor this at some point ... the important thing is the API (being able to say Requestor.Global.Foo)
-		//
-		// This is *really* redundant ... It would be nice to use an instance of Requestor to store this stuff?  perhaps?
-		//
-		public class GlobalStuff {
+		public class GlobalConfiguration {
 			public bool AllowRealRequests { get; set; }
-			public void EnableRealRequests()  { AllowRealRequests = true;  }
-			public void DisableRealRequests() { AllowRealRequests = false; }
 
 			public IDictionary<string,string> DefaultHeaders = new Dictionary<string,string>();
 
+			// Faking responses ... copy/pasted from Requestor ... TODO DRY this up!
+			public void EnableRealRequests()  { AllowRealRequests = true;  }
+			public void DisableRealRequests() { AllowRealRequests = false; }
 			public FakeResponseList FakeResponses = new FakeResponseList();
-
 			public void FakeResponse(string method, string url, IResponse response) {
 				FakeResponses.Add(method, url, response);
+			}
+			public void FakeResponse(int times, string method, string url, IResponse response) {
+				FakeResponses.Add(times, method, url, response);
+			}
+			public void FakeResponseOnce(string method, string url, IResponse response) {
+				FakeResponse(1, method, url, response);
 			}
 
 			public string RootUrl;
@@ -117,11 +135,11 @@ namespace Requestoring {
 			return (type.GetInterface(typeof(IRequestor).FullName) != null);
 		}
 
-		static GlobalStuff _global = new GlobalStuff {
+		static GlobalConfiguration _global = new GlobalConfiguration {
 			AllowRealRequests = true
 		};
 
-		public static GlobalStuff Global {
+		public static GlobalConfiguration Global {
 			get { return _global;  }
 			set { _global = value; }
 		}
@@ -149,13 +167,18 @@ namespace Requestoring {
 			set { _allowRealRequests = value; }
 		}
 
+		// Faking responses
 		public void DisableRealRequests() { AllowRealRequests = false; }
 		public void EnableRealRequests()  { AllowRealRequests = true;  }
-
 		public FakeResponseList FakeResponses = new FakeResponseList();
-
 		public void FakeResponse(string method, string url, IResponse response) {
 			FakeResponses.Add(method, url, response);
+		}
+		public void FakeResponse(int times, string method, string url, IResponse response) {
+			FakeResponses.Add(times, method, url, response);
+		}
+		public void FakeResponseOnce(string method, string url, IResponse response) {
+			FakeResponse(1, method, url, response);
 		}
 
 		public IDictionary<string,string> DefaultHeaders = new Dictionary<string,string>();

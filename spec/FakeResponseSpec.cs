@@ -140,8 +140,44 @@ namespace Requestoring.Specs {
 			});
 		}
 
-		[Test][Ignore]
-		public void Can_specify_a_number_of_times_that_the_fake_response_should_be_returned() {
+		[Test]
+		public void can_specify_a_number_of_times_that_the_fake_response_should_be_returned() {
+			var requestor = new Requestor(RootUrl);
+
+			// once globally
+			requestor.Get("/foo").Body.ShouldEqual("Not Found: GET /foo");
+			Requestor.Global.FakeResponseOnce("GET", "http://localhost:3000/foo", new Response { Body = "Foo!" });
+			requestor.Get("/foo").Body.ShouldEqual("Foo!");
+			requestor.Get("/foo").Body.ShouldEqual("Not Found: GET /foo");
+
+			// twice globally
+			requestor.Get("/foo").Body.ShouldEqual("Not Found: GET /foo");
+			Requestor.Global.FakeResponse(2, "GET", "http://localhost:3000/foo", new Response { Body = "Foo!" });
+			requestor.Get("/foo").Body.ShouldEqual("Foo!");
+			requestor.Get("/foo").Body.ShouldEqual("Foo!");
+			requestor.Get("/foo").Body.ShouldEqual("Not Found: GET /foo");
+
+			// once on instance
+			requestor.Get("/foo").Body.ShouldEqual("Not Found: GET /foo");
+			requestor.FakeResponseOnce("GET", "http://localhost:3000/foo", new Response { Body = "Foo!" });
+			requestor.Get("/foo").Body.ShouldEqual("Foo!");
+			requestor.Get("/foo").Body.ShouldEqual("Not Found: GET /foo");
+			
+			// 3 times on instance
+			requestor.Get("/foo").Body.ShouldEqual("Not Found: GET /foo");
+			requestor.FakeResponse(3, "GET", "http://localhost:3000/foo", new Response { Body = "Foo!" });
+			requestor.Get("/foo").Body.ShouldEqual("Foo!");
+			requestor.Get("/foo").Body.ShouldEqual("Foo!");
+			requestor.Get("/foo").Body.ShouldEqual("Foo!");
+			requestor.Get("/foo").Body.ShouldEqual("Not Found: GET /foo");
+
+			// once globally, once on instance (both will happen)
+			requestor.Get("/foo").Body.ShouldEqual("Not Found: GET /foo");
+			Requestor.Global.FakeResponseOnce("GET", "http://localhost:3000/foo", new Response { Body = "Foo!" });
+			requestor.FakeResponseOnce("GET", "http://localhost:3000/foo", new Response { Body = "Foo!" });
+			requestor.Get("/foo").Body.ShouldEqual("Foo!");
+			requestor.Get("/foo").Body.ShouldEqual("Foo!");
+			requestor.Get("/foo").Body.ShouldEqual("Not Found: GET /foo");
 		}
     }
 }
