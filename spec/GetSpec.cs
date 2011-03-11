@@ -125,21 +125,29 @@ namespace Requestoring.Specs {
 			LastResponse.Status.ShouldEqual(302);
 			LastResponse.Body.ShouldEqual("Redirecting");
 			LastResponse.Headers["Location"].ShouldEqual("/redirect-twice");
+			CurrentPath.ShouldEqual("/redirect-three-times");
+			CurrentUrl.ShouldEqual("http://localhost:3000/redirect-three-times");
 
 			FollowRedirect();
 			LastResponse.Status.ShouldEqual(301);
 			LastResponse.Body.ShouldEqual("Redirecting");
 			LastResponse.Headers["Location"].ShouldEqual("/redirect");
+			CurrentPath.ShouldEqual("/redirect-twice");
+			CurrentUrl.ShouldEqual("http://localhost:3000/redirect-twice");
 
 			FollowRedirect();
 			LastResponse.Body.ShouldEqual("Redirecting");
 			LastResponse.Headers.Keys.ShouldContain("Location");
 			LastResponse.Headers["Location"].ShouldEqual("/info?redirected=true");
+			CurrentPath.ShouldEqual("/redirect");
+			CurrentUrl.ShouldEqual("http://localhost:3000/redirect");
 
 			FollowRedirect();
 			LastResponse.Status.ShouldEqual(200);
 			LastResponse.Body.ShouldContain("GET /info");
 			LastResponse.Headers.Keys.ShouldNotContain("Location");
+			CurrentPath.ShouldEqual("/info?redirected=true");
+			CurrentUrl.ShouldEqual("http://localhost:3000/info?redirected=true");
 			
 			// Do it automatically
 			AutoRedirect = true;
@@ -148,6 +156,8 @@ namespace Requestoring.Specs {
 			LastResponse.Status.ShouldEqual(200);
 			LastResponse.Body.ShouldContain("GET /info");
 			LastResponse.Headers.Keys.ShouldNotContain("Location");
+			CurrentPath.ShouldEqual("/info?redirected=true");
+			CurrentUrl.ShouldEqual("http://localhost:3000/info?redirected=true");
 		}
 
 		class SimpleRequestor : IRequestor {

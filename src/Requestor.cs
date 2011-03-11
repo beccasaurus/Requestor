@@ -200,6 +200,10 @@ namespace Requestoring {
 			set { _implementation = value; }
 		}
 
+		public Uri CurrentUri { get; set; }
+		public string CurrentUrl  { get { return (CurrentUri == null) ? null : CurrentUri.ToString();   } }
+		public string CurrentPath { get { return (CurrentUri == null) ? null : CurrentUri.PathAndQuery; } }
+
 		public string Url(string path) {
 			if (IsAbsoluteUrl(path))
 				return path;
@@ -254,7 +258,15 @@ namespace Requestoring {
 				throw new RealRequestsDisabledException(string.Format("Real requests are disabled. {0} {1}", method, Url(path, info.QueryStrings)));
 		}
 		public IResponse Request(string method, string path, RequestInfo info, IRequestor requestor) {
-			var response = requestor.GetResponse(method, Url(path, info.QueryStrings), info.PostData, MergeWithDefaultHeaders(info.Headers));
+			var url      = Url(path, info.QueryStrings);
+			var response = requestor.GetResponse(method, url, info.PostData, MergeWithDefaultHeaders(info.Headers));
+
+			try {
+				CurrentUri = new Uri(url);
+			} catch (Exception ex) {
+				Console.WriteLine("BAD URI: ", url);
+				CurrentUri = null;
+			}
 
 			if (response == null)
 				return null;
