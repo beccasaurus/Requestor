@@ -219,6 +219,7 @@ namespace Requestoring {
 				var url = Url(path) + "?";
 				foreach (var queryString in queryStrings)
 					url += queryString.Key + "=" + HttpUtility.UrlEncode(queryString.Value) + "&";
+                url.TrimEnd('&');
 				return url;
 			} else
 				return Url(path);
@@ -258,15 +259,27 @@ namespace Requestoring {
 				throw new RealRequestsDisabledException(string.Format("Real requests are disabled. {0} {1}", method, Url(path, info.QueryStrings)));
 		}
 		public IResponse Request(string method, string path, RequestInfo info, IRequestor requestor) {
-			var url      = Url(path, info.QueryStrings);
-			var response = requestor.GetResponse(method, url, info.PostData, MergeWithDefaultHeaders(info.Headers));
-
+			var url = Url(path, info.QueryStrings);
+			
 			try {
 				CurrentUri = new Uri(url);
 			} catch (Exception ex) {
-				Console.WriteLine("BAD URI: ", url);
-				CurrentUri = null;
+				Console.WriteLine("BAD URI.  method:{0} path:{1} url:{2}", method, path, url);
+                Console.WriteLine(ex.ToString());
 			}
+
+            IResponse response;
+
+            try {
+                response = requestor.GetResponse(method, url, info.PostData, MergeWithDefaultHeaders(info.Headers));
+            } catch (Exception ex) {
+                Console.WriteLine("Requestor ({0}) failed to respond for {1} {2} [{3}]", requestor.GetType(), method, path, url);
+                Console.WriteLine(ex.ToString());
+                Console.WriteLine("Requested info:");
+                Console.WriteLine("\tPostData: " + string.Join(", ", info.PostData.Select(item => string.Format("{0} => {1}", item.Key, item.Value)).ToArray()));
+                Console.WriteLine("\tHeaders:  " + string.Join(", ", info.Headers.Select(item => string.Format("{0} => {1}", item.Key, item.Value)).ToArray()));
+                return null;
+            }
 
 			if (response == null)
 				return null;
@@ -297,8 +310,10 @@ namespace Requestoring {
 				throw new Exception("Cannot follow redirect.  response is null.");
 			else if (!response.Headers.Keys.Contains("Location"))
 				throw new Exception("Cannot follow redirect.  Location header of response is null.");
-			else 
+			else {
+                PostData.Clear(); // You cannot have PostData when doing a GET
 				return Get(response.Headers["Location"]);
+            }
 		}
 
 		public void EnableCookies() {
