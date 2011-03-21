@@ -320,53 +320,62 @@ namespace Requestoring {
             }
 		}
 
-		public void EnableCookies() {
+		public Requestor EnableCookies() {
 			if (Implementation is IHaveCookies)
 				(Implementation as IHaveCookies).EnableCookies();
 			else
 				throw new Exception(string.Format("Cannot enable cookies.  Requestor Implementation {0} does not implement IHaveCookies", Implementation));
+			return this;
 		}
 
-		public void DisableCookies() {
+		public Requestor DisableCookies() {
 			if (Implementation is IHaveCookies)
 				(Implementation as IHaveCookies).DisableCookies();
 			else
 				throw new Exception(string.Format("Cannot disable cookies.  Requestor Implementation {0} does not implement IHaveCookies", Implementation));
+			return this;
 		}
 
-		public void ResetCookies() {
+		public Requestor ResetCookies() {
 			if (Implementation is IHaveCookies)
 				(Implementation as IHaveCookies).ResetCookies();
 			else
 				throw new Exception(string.Format("Cannot reset cookies.  Requestor Implementation {0} does not implement IHaveCookies", Implementation));
+			return this;
 		}
 
-		public void Reset() {
+		public Requestor Reset() {
 			Implementation = null;
 			ResetLastResponse();
 			DefaultHeaders.Clear();
 			FakeResponses.Clear();
+			return this;
 		}
 
-		public void ResetLastResponse() {
+		public Requestor ResetLastResponse() {
 			LastResponse = null;
+			return this;
 		}
 
-		public void AddHeader(string key, string value) {
+		public Requestor AddHeader(string key, string value) {
 			Headers.Add(key, value);
+			return this;
 		}
 
-		public void AddQueryString(string key, string value) {
+		public Requestor AddQueryString(string key, string value) {
 			QueryStrings.Add(key, value);
+			return this;
 		}
 
-		public void AddPostData(string key, string value) {
+		public Requestor AddPostData(string key, string value) {
 			PostData.Add(key, value);
+			return this;
 		}
 
-		public void SetPostData(string value) {
+		public Requestor SetPostData(string value) {
 			PostData.Clear();
 			PostData.Add(value, null);
+			return this;
 		}
 		#endregion
 

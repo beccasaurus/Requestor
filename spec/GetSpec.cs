@@ -88,6 +88,14 @@ namespace Requestoring.Specs {
 		}
 
 		[Test]
+		public void can_chain_calls_to_AddQueryString() {
+			AddQueryString("Neat", "O").AddQueryString("Foo", "Chained").Get("/info");
+
+			LastResponse.Body.ShouldContain("QueryString: Neat = O");
+			LastResponse.Body.ShouldContain("QueryString: Foo = Chained");
+		}
+
+		[Test]
 		public void can_get_last_response() {
 			var requestor = new Requestor(RootUrl);
 			requestor.LastResponse.Should(Be.Null);
