@@ -265,7 +265,8 @@ namespace Requestoring {
 				CurrentUri = new Uri(url);
 			} catch (Exception ex) {
 				Console.WriteLine("BAD URI.  method:{0} path:{1} url:{2}", method, path, url);
-                Console.WriteLine(ex.ToString());
+				LastException = ex;
+				// We don't return null here because a custom IRequestor could support this URL, even if it's not a valid URI
 			}
 
             IResponse response;
@@ -274,10 +275,11 @@ namespace Requestoring {
                 response = requestor.GetResponse(method, url, info.PostData, MergeWithDefaultHeaders(info.Headers));
             } catch (Exception ex) {
                 Console.WriteLine("Requestor ({0}) failed to respond for {1} {2} [{3}]", requestor.GetType(), method, path, url);
-                Console.WriteLine(ex.ToString());
                 Console.WriteLine("Requested info:");
+				Console.WriteLine("\t{0} {1}", method, url);
                 Console.WriteLine("\tPostData: " + string.Join(", ", info.PostData.Select(item => string.Format("{0} => {1}", item.Key, item.Value)).ToArray()));
                 Console.WriteLine("\tHeaders:  " + string.Join(", ", info.Headers.Select(item => string.Format("{0} => {1}", item.Key, item.Value)).ToArray()));
+				LastException = ex;
                 return null;
             }
 
@@ -296,6 +298,8 @@ namespace Requestoring {
 			get { return _lastResponse;  }
 			set { _lastResponse = value; }
 		}
+
+		public Exception LastException { get; set; }
 
 		public bool IsRedirect(IResponse response) {
 			return (response.Status.ToString().StartsWith("3") && response.Headers.Keys.Contains("Location"));

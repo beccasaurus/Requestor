@@ -177,7 +177,10 @@ namespace Requestoring.Specs {
 
 			// trying to do a GET to a relative path without a RootUrl will cause an exception
 			var message = "HttpRequestor.GetResponse failed for: GET /foo.  This url generated a System.Net.FileWebRequest instead of a HttpWebRequest.";
-			Should.Throw<Exception>(message, () => requestor.Get("/foo"));
+			var response = requestor.Get("/foo"); // <--- this doesn't raise an exception, but returns null
+			response.Should(Be.Null);
+			requestor.LastException.Should(Be.AssignableFrom(typeof(Exception)));
+			requestor.LastException.Message.ShouldContain(message);
 
 			// if we switch to our SimpleRequestor, tho, we're OK
 			Requestor.Global.Implementation = new SimpleRequestor();
