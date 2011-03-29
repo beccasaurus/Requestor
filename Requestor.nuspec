@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <id>Requestor</id>
+    <version>1.0.2.1</version>
+    <authors>remi Taylor</authors>
+    <description>Easily consume or test RESTful web applications in .NET</description>
+    <projectUrl>https://github.com/remi/Requestor</projectUrl>
+  </metadata>
+  <files>
+    <file src="bin\Release\Requestor.dll" target="lib" />
+    <file src="bin\Release\Requestor.xml" target="lib" />
+    <file src="src\**.cs" />
+    <file src="README.markdown" />
+  </files>
+</package>
