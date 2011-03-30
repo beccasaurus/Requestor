@@ -85,8 +85,18 @@ namespace Requestoring {
 
 		public class GlobalConfiguration {
 			public bool AutoRedirect { get; set; }
-
 			public bool AllowRealRequests { get; set; }
+			
+			bool _verbose;
+			public bool Verbose {
+				get {
+					if (Environment.GetEnvironmentVariable("VERBOSE") != null && Environment.GetEnvironmentVariable("VERBOSE") == "true")
+						return true;
+					else
+						return _verbose;
+				}
+				set { _verbose = value; }
+			}
 
 			public IDictionary<string,string> DefaultHeaders = new Dictionary<string,string>();
 
@@ -173,6 +183,12 @@ namespace Requestoring {
 			set { _allowRealRequests = value; }
 		}
 
+		bool? _verbose;
+		public bool Verbose {
+			get { return (bool)(_verbose ?? Requestor.Global.Verbose); }
+			set { _verbose = value; }
+		}
+
 		// Faking responses
 		public Requestor DisableRealRequests() { AllowRealRequests = false; return this; }
 		public Requestor EnableRealRequests()  { AllowRealRequests = true;  return this; }
@@ -245,7 +261,19 @@ namespace Requestoring {
 		public IResponse Request(string method, string path, object variables, string defaultVariableType) {
 			return Request(method, path, MergeInfo(new RequestInfo(variables, defaultVariableType)));
 		}
+
+		/// <summary>This is THE Request methd that all other ones use.  It will process fake and real requests.</summary>
 		public IResponse Request(string method, string path, RequestInfo info) {
+			if (Verbose) {
+				Console.WriteLine("{0} {1}", method, path);
+				foreach (var queryString in info.QueryStrings)
+					Console.WriteLine("\tQUERY  {0}: {1}", queryString.Key, queryString.Value);
+				foreach (var postItem in info.PostData)
+					Console.WriteLine("\tPOST   {0}: {1}", postItem.Key, postItem.Value);
+				foreach (var header in info.Headers)
+					Console.WriteLine("\tHEADER {0}: {1}", header.Key, header.Value);
+			}
+
 			// try instance fake requests
 			var instanceFakeResponse = Request(method, path, info, this.FakeResponses);
 			if (instanceFakeResponse != null)
